@@ -1,0 +1,30 @@
+----------------------------
+Initial Commit - v0.1
+
+- Created files
+	Frog
+	GamePrep
+	GameProperties
+	Sprite
+	Vehicle
+- Added Placeholder Images
+	Grass
+	Vehicle
+	Water
+	Log
+	Road
+	Frog
+
+Frogger Game:
+	- One vehicle moves at a set speed
+	- Frog moves at user's input
+		- WASD and arrow keys both work
+	- Working collision detection between frog and vehicle
+	- Pressing escape stops the thread and exits game
+	- Background temporarily set
+	
+----------------------------
+v0.1.1
+
+- Temporarily suppressing unused warnings
+- Added a change log

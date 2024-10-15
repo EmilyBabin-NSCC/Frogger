@@ -8,7 +8,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
-@SuppressWarnings("serial")
+@SuppressWarnings({"unused", "serial"})
 public class GamePrep extends JFrame implements KeyListener, ActionListener {
 	private Frog frog;
 	private Vehicle vehicle;
@@ -39,7 +39,7 @@ public class GamePrep extends JFrame implements KeyListener, ActionListener {
 		vehicle.setWidth(50);
 		
 		// Labels
-		grassLabel = new JLabel();
+//		grassLabel = new JLabel();
 		waterLabel = new JLabel();
 		frogLabel = new JLabel();
 		vehicleLabel = new JLabel();
@@ -267,6 +267,10 @@ public class GamePrep extends JFrame implements KeyListener, ActionListener {
 	public ImageIcon setImage(String fileName) {
 		return new ImageIcon(getClass().getResource("images/" + fileName));
 	}
+	
+//	public ImageIcon setImageIcon(ImageIcon img) {
+//		return new
+//	}
 	
 	// Method to attach the images to labels to display
 	public void loadImage(JLabel label, ImageIcon image, int width, int height, int x, int y) {

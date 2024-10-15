@@ -1,6 +1,7 @@
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 
+@SuppressWarnings("unused")
 public class Vehicle extends Sprite implements Runnable {
 	private Boolean moving;
 	private Thread thread;
