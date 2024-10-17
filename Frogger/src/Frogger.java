@@ -9,7 +9,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 
 @SuppressWarnings({"unused", "serial"})
-public class GamePrep extends JFrame implements KeyListener, ActionListener {
+public class Frogger extends JFrame implements KeyListener, ActionListener {
 	private Frog frog;
 	private Vehicle vehicle;
 	
@@ -20,7 +20,7 @@ public class GamePrep extends JFrame implements KeyListener, ActionListener {
 	// Used to prioritize which graphic elements sit on top of each other so the frog isn't behind the background
 	private int count = 0;
 	
-	public GamePrep() {
+	public Frogger() {
 		// Setting the GUI window
 		setSize(GameProperties.SCREEN_WIDTH, GameProperties.SCREEN_HEIGHT);
 		content = getContentPane();
@@ -210,7 +210,7 @@ public class GamePrep extends JFrame implements KeyListener, ActionListener {
 	
 	// Main
 	public static void main(String[] args) {
-		GamePrep Frogger = new GamePrep();
+		Frogger Frogger = new Frogger();
 		Frogger.setVisible(true);
 	}
 

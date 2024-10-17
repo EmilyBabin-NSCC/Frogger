@@ -28,3 +28,10 @@ v0.1.1
 
 - Temporarily suppressing unused warnings
 - Added a change log
+
+----------------------------
+v0.1.2
+
+- Renamed GamePrep.java to Frogger.java
+
+----------------------------
