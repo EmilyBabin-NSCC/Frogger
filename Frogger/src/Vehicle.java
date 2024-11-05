@@ -1,23 +1,29 @@
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 
 @SuppressWarnings("unused")
 public class Vehicle extends Sprite implements Runnable {
-	private Boolean moving;
+	private Boolean moving, collisionDetected = false;
+	
 	private Thread thread;
 	private JLabel vehicleLabel, frogLabel;
 	private Frog frog;
+	
+	private Frogger game;
 	
 	public Vehicle() {
 		super();
 	}
 	
-	public Vehicle(int x, int y, int height, int width, String image, Boolean moving) {
+	public Vehicle(int x, int y, int height, int width, String image, Boolean moving, Frogger game) {
 		super(x, y, height, width, image);
-		vehicleLabel = new JLabel(new ImageIcon(getClass().getResource("images/vehicle1.png")));
+		this.moving = moving;
+		this.game = game;
+		vehicleLabel = new JLabel(new ImageIcon(getClass().getResource(image)));
 		vehicleLabel.setSize(width, height);
 		vehicleLabel.setLocation(x, y);
-		this.moving = moving;
+		
 	}
 	
 	public Vehicle(int x, int y, int height, int width) {
@@ -40,31 +46,21 @@ public class Vehicle extends Sprite implements Runnable {
 	
 	@Override
 	public void run() {
-		System.out.println("Thread Started");
 		while (this.moving) {
 			int x = this.x;
-			x += GameProperties.CHARACTER_STEP;
+			x += 25;
 			if ( x >= GameProperties.SCREEN_WIDTH) { x =- 1 * this.width;}
 			
 			this.setX(x);
 			vehicleLabel.setLocation(this.x, this.y);
 			
-//			System.out.println("Detecting Collision...");
 			this.detectCollision();
-//		
-			
-//			System.out.println("v x, y:" + this.x + ", " + this.y);
-//			System.out.println("v r.x, r.y:" + this.r.x + ", " + this.r.y);
-//			System.out.println("v width, height:" + this.width + ", " + this.height);
-//			System.out.println("v r.width, r.height:" + this.r.width + ", " + this.r.height);
-			
-			try { Thread.sleep(200);}
+
+			try { Thread.sleep(100);}
 			catch (Exception e) {
 				System.out.println("Caught");
 			}
 		}
-		
-		System.out.println("Thread Stopped");
 		
 	}
 	
@@ -84,10 +80,16 @@ public class Vehicle extends Sprite implements Runnable {
 	
 	public void setFrogLabel(JLabel temp) {frogLabel = temp;}
 	
+	public Boolean collided() {
+		return collisionDetected;
+	}
+	
 	private void detectCollision() {
+		// If Vehicle's Rectangle intersects with Frog's Rectangle:
 		if (r.intersects(frog.getRectangle())) {
-			System.out.println("Collision");
 			this.moving = false;
+			this.collisionDetected = true;
+			game.endGameSequence();
 			
 		}
 	}

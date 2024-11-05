@@ -35,3 +35,45 @@ v0.1.2
 - Renamed GamePrep.java to Frogger.java
 
 ----------------------------
+v0.1.3
+
+- Edited Vehicle class to pass in the Frogger game
+- Edited Vehicle instant in Frogger class to pass in game
+- Triggered endGameSequence from Vehicle class
+- Removed console debugging lines
+- Moved the frog movement code into each of their own functions to clean up code
+- Created Log.java
+- Log moves on screen
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
