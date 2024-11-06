@@ -1,44 +1,30 @@
+import java.awt.Rectangle;
+
 public class Frog extends Sprite {
-	private Frogger game;
+	// Attributes
+	private Frogger frogger;
 	
+	// Default Constructor
 	public Frog() {
 		super();
 	}
 	
-	public Frog(int x, int y, int height, int width, String image, Frogger game) {
+	// Secondary Constructor
+	public Frog(int x, int y, int height, int width, String image, Frogger frogger) {
 		super(x, y, height, width, image);
+		this.frogger = frogger;
 	}
 	
-	public Frog(int x, int y, int height, int width, String image) {
-		super(x, y, height, width, image);
-	}
-	
-	public Frog(int x, int y, int height, int width) {
-		super(x, y, height, width);
-	}
-	
-	public void logFrogCollision(Log log) {
-		if (y >= 100 && y <= 350) {		
-			if (r.intersects(log.getRectangle())) {
-//				collision = true;
-				this.setX(this.getX() + log.getSpeed());
-				
-			} else {
-				log.setMoving(false);
-				game.endGameSequence();
-			}
-			
-		}
-	}
-	
-	public void setGame(Frogger game) {this.game = game;}
+	// Getters / Setters
+	// Frogger
+	public Frogger getFrogger() {return frogger;}
+	public void setGame(Frogger frogger) {this.frogger = frogger;}
 
-	public boolean isCollidingWith(Log log) {
-		return 
-				this.getX() < log.getX() + log.getWidth() &&
-				this.getX() + this.getWidth() > log.getX() &&
-				this.getY() == log.getY();
+	// Checks if Frog Collides with Log
+	public Boolean isCollidingWith(Log log) {	
+		Rectangle frogRect = new Rectangle(this.getX(), this.getY(), this.getWidth(), this.getHeight());
+	    Rectangle logRect = new Rectangle(log.getX(), log.getY(), log.getWidth(), log.getHeight());
+	    
+	    return frogRect.intersects(logRect);
 	}
-	
-
 }

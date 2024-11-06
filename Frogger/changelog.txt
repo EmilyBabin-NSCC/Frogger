@@ -56,7 +56,13 @@ v0.1.4
 ----------------------------
 v0.1.5
 
+- Cleaned Frog.java
+- Cleaned Frogger.java
+	- Renamed loadImage() to loadBackgroundImage() because thats all its used for
+- Cleaned Log.java
+- Cleaned Vehicle.java
 
+----------------------------
 
 
 

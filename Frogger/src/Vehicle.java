@@ -1,64 +1,58 @@
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 
-@SuppressWarnings("unused")
 public class Vehicle extends Sprite implements Runnable {
-	private Boolean moving, collisionDetected = false;
+	// Attributes
+	private Boolean moving;
+	private Frogger frogger;
 	private int speed;
-	
-	private Thread thread;
 	private JLabel vehicleLabel, frogLabel;
 	private Frog frog;
 	
-	private Frogger game;
+	private Thread thread;
 	
+	// Default Constructor
 	public Vehicle() {
 		super();
 	}
 	
-	public Vehicle(int x, int y, int height, int width, String image, Boolean moving, Frogger game) {
+	// Secondary Constructor
+	public Vehicle(int x, int y, int height, int width, String image, Boolean moving, Frogger game, int speed) {
 		super(x, y, height, width, image);
 		this.moving = moving;
-		this.game = game;
+		this.frogger = game;
+		this.speed = speed;
 		vehicleLabel = new JLabel(new ImageIcon(getClass().getResource(image)));
 		vehicleLabel.setSize(width, height);
 		vehicleLabel.setLocation(x, y);
+	}
+
+	// Getters / Setters
+	// Moving
+	public Boolean getMoving() {return moving;}
+	public void setMoving(Boolean temp) {moving = temp;}
+	
+	// Frogger
+	public Frogger getFrogger() {return frogger;}
+	public void setFrogger(Frogger game) {this.frogger = game;}
+	
+	// Speed
+	public int getSpeed() {return speed;}
+	public void setSpeed(int temp) {speed = temp;}
+	
+	// VehicleLabel
+	public JLabel getVehicleLabel() {return vehicleLabel;}
+	public void setVehicleLabel(JLabel temp) {vehicleLabel = temp;}
+	
+	// Frog
+	public Frog getFrog() {return frog;}
+	public void setFrog(Frog temp) {frog = temp;}
 		
-	}
+	// Frog Label
+	public JLabel getFrogLabel() {return frogLabel;}
+	public void setFrogLabel(JLabel temp) {frogLabel = temp;}
 	
-	public Vehicle(int x, int y, int height, int width) {
-		this.x = x;
-		this.y = y;
-		this.height = height;
-		this.width = width;
-		vehicleLabel.setSize(width, height);
-		vehicleLabel.setLocation(x, y);;
-	}
-	
-	public Vehicle(int x, int y, int height, int width, int speed) {
-		this.x = x;
-		this.y = y;
-		this.height = height;
-		this.width = width;
-		this.speed = speed;
-		vehicleLabel.setSize(width, height);
-		vehicleLabel.setLocation(x, y);;
-	}
-	
-	public Boolean getMoving() {
-		return moving;
-	}
-	
-	public void setMoving(Boolean moving) {
-		this.moving = moving;
-	}
-	
-	public void setFrogger(Frogger game) {
-		this.game = game;
-	}
-	
-	
+	// Thread
 	@Override
 	public void run() {
 		while (this.moving) {
@@ -79,36 +73,22 @@ public class Vehicle extends Sprite implements Runnable {
 		
 	}
 	
-	public void stopThread() {
-		this.moving = false;
-	}
-	
-	// Start function to call thread
+	// Start Thread
 	public void startThread() {
 		thread = new Thread(this, "Vehicle Thread");
 		thread.start();
 		this.moving = true;
 	}
 	
-	public void setVehicleLabel(JLabel temp) {vehicleLabel = temp;}
-	
-	public void setFrog(Frog temp) {frog = temp;}
-	
-	public void setFrogLabel(JLabel temp) {frogLabel = temp;}
-	
-//	public Boolean collided() {
-//		return collisionDetected;
-//	}
-	
+	// Stop Thread
+	public void stopThread() {this.moving = false;}
+
+	// Check if Frog Collides with Vehicle
 	private void detectCollision() {
 		// If Vehicle's Rectangle intersects with Frog's Rectangle:
 		if (r.intersects(frog.getRectangle())) {
-			System.out.println("Collision detected!");
 			this.moving = false;
-			this.collisionDetected = true;
-			game.endGameSequence();
-			
+			frogger.endGameSequence();		
 		}
 	}
-	
 }

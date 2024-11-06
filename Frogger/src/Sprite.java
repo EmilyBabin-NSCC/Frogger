@@ -7,11 +7,13 @@ public class Sprite {
 	protected String image; // Image File
 	protected Rectangle r; // Rectangle for Collision Detection
 	
+	// Default Constructor
 	public Sprite() {
 		super();
 		r = new Rectangle(0,0,0,0);
 	}
 	
+	// Secondary Constructor
 	public Sprite(int x, int y, int height, int width, String image) {
 		super();
 		this.x = x;
@@ -19,15 +21,6 @@ public class Sprite {
 		this.height = height;
 		this.width = width;
 		this.image = image;
-		r = new Rectangle(x, y, height, width);
-	}
-	
-	public Sprite(int x, int y, int height, int width) {
-		super();
-		this.x = x;
-		this.y = y;
-		this.height = height;
-		this.width = width;
 		r = new Rectangle(x, y, height, width);
 	}
 	
@@ -41,7 +34,6 @@ public class Sprite {
 		
 	// Y
 	public int getY() {return y;}
-	
 	public void setY(int y) {
 		this.y = y;
 		this.r.y = this.y;
@@ -61,12 +53,10 @@ public class Sprite {
 		this.r.width = width;
 	}
 	
-	//Image
+	// Image
 	public String getImage() {return image;}
 	public void setImage(String image) {this.image = image;}
 	
 	// Rectangle
-	public Rectangle getRectangle() {return this.r;}
-	
-	
+	public Rectangle getRectangle() {return this.r;}	
 }
