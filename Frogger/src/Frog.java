@@ -18,15 +18,26 @@ public class Frog extends Sprite {
 	}
 	
 	public void logFrogCollision(Log log) {
-		Boolean collision = false;
-		
-		if (y >= 100 && y <= 350) {
-			
-			if (!collision) {
+		if (y >= 100 && y <= 350) {		
+			if (r.intersects(log.getRectangle())) {
+//				collision = true;
+				this.setX(this.getX() + log.getSpeed());
+				
+			} else {
+				log.setMoving(false);
 				game.endGameSequence();
 			}
 			
 		}
+	}
+	
+	public void setGame(Frogger game) {this.game = game;}
+
+	public boolean isCollidingWith(Log log) {
+		return 
+				this.getX() < log.getX() + log.getWidth() &&
+				this.getX() + this.getWidth() > log.getX() &&
+				this.getY() == log.getY();
 	}
 	
 

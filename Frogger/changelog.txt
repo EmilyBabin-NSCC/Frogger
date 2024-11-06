@@ -45,6 +45,16 @@ v0.1.3
 - Created Log.java
 - Log moves on screen
 
+----------------------------
+v0.1.4
+
+- Set variables for game properties in frogger class
+- Single log functionality
+- A lot of code cleaning
+- Created methods for creating objects in frogger class
+
+
+
 
 
 

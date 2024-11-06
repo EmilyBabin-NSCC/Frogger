@@ -18,67 +18,34 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 	private JLabel frogLabel, roadLabel, grassLabel, waterLabel, vehicleLabel, logLabel;
 	private ImageIcon frogImage, roadImage, grassImage, waterImage, vehicleImage, logImage;
 
-	// Used to prioritize which graphic elements sit on top of each other so the frog isn't behind the background
+	private int screenWidth = GameProperties.SCREEN_WIDTH;
+	private int screenHeight = GameProperties.SCREEN_HEIGHT;
+	private int charStep = GameProperties.CHARACTER_STEP;
+	
+	// Used to prioritize which graphic elements sit on top of each other 
+	// so the frog isn't behind the background
 	private int count = 0;
 	
 	public Frogger() {
 		// Setting the GUI window
-		setSize(GameProperties.SCREEN_WIDTH, GameProperties.SCREEN_HEIGHT);
+		setSize(screenWidth, screenHeight);
 		content = getContentPane();
 		setResizable(false);
 		setTitle("Frogger");
 		setLayout(null);
 		
-		// Frog - X | Y | H | W 
-		frog = new Frog(50 * 7, 650, GameProperties.CHARACTER_STEP, GameProperties.CHARACTER_STEP);
-		frog.setHeight(GameProperties.CHARACTER_STEP);
-		frog.setWidth(GameProperties.CHARACTER_STEP);
-
-		// Vehicle - X | Y | H | W | Game
-		vehicle = new Vehicle(50, 600, 50, 50, "", true, this);
-		vehicle.setHeight(50);
-		vehicle.setWidth(50);
-		
-		// Log -
-		log = new Log(100, 300, 50, 50, "", true, this);
-		log.setHeight(50);
-		log.setWidth(50);
-		
-		// Labels
+		// Labels for Background
 		grassLabel = new JLabel();
 		waterLabel = new JLabel();
-		frogLabel = new JLabel();
-		vehicleLabel = new JLabel();
 		roadLabel = new JLabel();
-		logLabel = new JLabel();
-		
-		// Retrieving each image
 		grassImage = setImage("grass1.png");
 		waterImage = setImage("water1.png");
-		frogImage = setImage("frog1.png");
-		vehicleImage = setImage("vehicle1.png");
 		roadImage = setImage("road1.png");
-		logImage = setImage("log1.png");
 		
-		// Load Image - Label | Image | H | W | X | Y
-		loadImage(frogLabel, frogImage, frog.getHeight(), frog.getWidth(), frog.getX(), frog.getY());
-		content.setComponentZOrder(frogLabel, count++);
-		
-		loadImage(vehicleLabel, vehicleImage, 50, 50, 50, 600);
-		loadImage(logLabel, logImage, 50, 50, 100, 300);
-		
-		vehicle.setVehicleLabel(vehicleLabel);
-		vehicle.setFrog(frog);
-		vehicle.setFrogLabel(frogLabel);
-		vehicle.startThread();
-		
-		log.setLogLabel(logLabel);
-		log.setFrog(frog);
-		log.setFrogLabel(frogLabel);
-		log.startThread();
-		
-		content.setComponentZOrder(vehicleLabel, count++);
-		content.setComponentZOrder(logLabel, count++);
+		// Initializing Objects
+		createFrog();
+		createVehicle();
+		createLog();
 		
 		setBackground();
 		
@@ -91,30 +58,31 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 	// Main
 	public static void main(String[] args) {
 		Frogger Frogger = new Frogger();
-		Frogger.setVisible(true);
-		
+		Frogger.setVisible(true);	
 	}
 
 	public void keyPressed(KeyEvent e) {
 		// Move Frog with Arrow Keys or WASD
 		int x = frog.getX();
 		int y = frog.getY();
+		int key = e.getKeyCode();
 
 		// Up / W
-		if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_W) {moveUp();}
+		if (key == KeyEvent.VK_UP || key == KeyEvent.VK_W) {moveUp();}
 			
 		// Down / S
-		else if (e.getKeyCode() == KeyEvent.VK_DOWN || e.getKeyCode() == KeyEvent.VK_S) {moveDown();}
+		else if (key == KeyEvent.VK_DOWN || key == KeyEvent.VK_S) {moveDown();}
 			
 		// Left / A
-		else if (e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_A) {moveLeft();}
+		else if (key == KeyEvent.VK_LEFT || key == KeyEvent.VK_A) {moveLeft();}
 			
 		// Right / D
-		else if (e.getKeyCode() == KeyEvent.VK_RIGHT || e.getKeyCode() == KeyEvent.VK_D) {moveRight();}
+		else if (key == KeyEvent.VK_RIGHT || key == KeyEvent.VK_D) {moveRight();}
 
 		// Escape Key closes the game
-		else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+		else if (key == KeyEvent.VK_ESCAPE) {
 			vehicle.setMoving(false);
+			log.setMoving(false);
 			dispose();
 			System.out.println("Exiting Game... ");
 		}
@@ -138,25 +106,133 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		content.add(label);
 	}
 	
-	// Unused Events
-	@Override
-	public void keyReleased(KeyEvent e) {
-		// TODO Auto-generated method stub
+	public void loadImgOntoLabel(JLabel label, ImageIcon img, Sprite object) {
+		label.setIcon(img);
+		label.setSize(object.getWidth(), object.getHeight());
+		label.setLocation(object.getX(), object.getY());
+		content.add(label);
+	}
+	
+	public void endGameSequence() {
+		System.out.println("Game Over");
+		log.setMoving(false);
+		vehicle.setMoving(false);
+	}
+	
+	public void moveUp() {
+		int y = frog.getY();
+		y -= GameProperties.CHARACTER_STEP;
+		if (y <= 0) {y = 0;} // Prevented from moving off screen top
+		frog.setY(y);
+	}
+	public void moveDown() {
+		int y = frog.getY();
+		y += GameProperties.CHARACTER_STEP;
+		// Prevents player from moving off bottom screen
+		if (y >= GameProperties.SCREEN_HEIGHT - GameProperties.TOOL_BAR - frog.getHeight()) {
+			y = GameProperties.SCREEN_HEIGHT - GameProperties.TOOL_BAR - frog.getHeight();
+		}
+		frog.setY(y);
+	}
+	public void moveLeft() {
+		int x = frog.getX();
+		x -= GameProperties.CHARACTER_STEP;
+		if (x + frog.getWidth() <= 0) {x = GameProperties.SCREEN_WIDTH;} // Loops player around to the right side
+		frog.setX(x);
+	}
+	public void moveRight() {
+		int x = frog.getX();
+		x += GameProperties.CHARACTER_STEP;
+		if (x >= GameProperties.SCREEN_WIDTH) {x = -1 * frog.getWidth();} // Loops player around to the left side
+		frog.setX(x);
+	}
+	
+	public void detectCollision() {
+		if (frog.isCollidingWith(log)) {
+			frog.setX(log.getX());
+			frogLabel.setLocation(frog.getX(), frog.getY());
+		} else if (isInWater(frog.getY())) {
+			endGameSequence();
+		}
+	}
+
+	private boolean isInWater(int y) {
+		return y > 100 && y < 350;
+	}
+	
+	private void createFrog() {
+		frog = new Frog();
+		frogLabel = new JLabel();
+		
+		frog.setX(charStep * 7);
+		frog.setY(650);
+		
+		frog.setHeight(charStep);
+		frog.setWidth(charStep);
+		
+		frog.setImage("frog1.png");
+		frogImage = setImage(frog.getImage());		
+		
+		loadImgOntoLabel(frogLabel, frogImage, frog);
+		
+		content.setComponentZOrder(frogLabel, count++);
+	}
+	
+	private void createVehicle() {
+		vehicle = new Vehicle();
+		vehicleLabel = new JLabel();
+		
+		vehicle.setX(50);
+		vehicle.setY(600);
+		
+		vehicle.setHeight(50);
+		vehicle.setWidth(50);
+		
+		vehicle.setImage("vehicle1.png");
+		vehicleImage = setImage(vehicle.getImage());
+		loadImgOntoLabel(vehicleLabel, vehicleImage, vehicle);
+		
+		vehicle.setMoving(true);
+		vehicle.setFrogger(this);
+		
+		content.setComponentZOrder(vehicleLabel, count++);
+		
+		vehicle.setVehicleLabel(vehicleLabel);
+		vehicle.setFrog(frog);
+		vehicle.setFrogLabel(frogLabel);
+		vehicle.startThread();
 		
 	}
 	
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
+	private void createLog() {
+		log = new Log();
+		logLabel = new JLabel();
+		
+		log.setX(100);
+		log.setY(300);
+		
+		log.setHeight(50);
+		log.setWidth(50);
+		
+		log.setImage("log1.png");
+		logImage = setImage(log.getImage());
+		loadImgOntoLabel(logLabel, logImage, log);
+		
+		log.setMoving(true);
+		log.setFrogger(this);
+		
+		log.setSpeed(25);
+		
+		log.setLogLabel(logLabel);
+		log.setFrog(frog);
+		log.setFrogLabel(frogLabel);
+		log.startThread();
+		
+		content.setComponentZOrder(logLabel, count++);
 		
 	}
 	
-	@Override
-	public void keyTyped(KeyEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
-	
+	// Temporary Method to Setting Background
 	public void setBackground() {
 		// This is a temporary setup
 		// Grass
@@ -309,48 +385,12 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		}
 	}
 	
-	public void endGameSequence() {
-		System.out.println("Game Over");
-	}
+	// Unused Events
+	@Override
+	public void keyReleased(KeyEvent e) {}
+	@Override
+	public void actionPerformed(ActionEvent e) {}
+	@Override
+	public void keyTyped(KeyEvent e) {}
 	
-	public void moveUp() {
-		int y = frog.getY();
-		y -= GameProperties.CHARACTER_STEP;
-		if (y <= 0) {y = 0;} // Prevented from moving off screen top
-		frog.setY(y);
-	}
-	
-	public void moveRight() {
-		int x = frog.getX();
-		x += GameProperties.CHARACTER_STEP;
-		if (x >= GameProperties.SCREEN_WIDTH) {x = -1 * frog.getWidth();} // Loops player around to the left side
-		frog.setX(x);
-	}
-	
-	public void moveDown() {
-		int y = frog.getY();
-		y += GameProperties.CHARACTER_STEP;
-		// Prevents player from moving off bottom screen
-		if (y >= GameProperties.SCREEN_HEIGHT - GameProperties.TOOL_BAR - frog.getHeight()) {
-			y = GameProperties.SCREEN_HEIGHT - GameProperties.TOOL_BAR - frog.getHeight();
-		}
-		frog.setY(y);
-	}
-	
-	public void moveLeft() {
-		int x = frog.getX();
-		x -= GameProperties.CHARACTER_STEP;
-		if (x + frog.getWidth() <= 0) {x = GameProperties.SCREEN_WIDTH;} // Loops player around to the right side
-		frog.setX(x);
-	}
-	
-	public void detectCollision() {
-		while (vehicle.getMoving()) {
-			if (vehicle.collided() == true) {
-				endGameSequence();
-				break;
-			}
-		}
-	}
-		
 }

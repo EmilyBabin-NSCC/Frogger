@@ -1,6 +1,5 @@
 import java.awt.Rectangle;
 
-// Class Skeleton
 public class Sprite {
 	// Attributes
 	protected int x, y; // Top Left Positioning
@@ -50,11 +49,17 @@ public class Sprite {
 
 	// Height
 	public int getHeight() {return height;}
-	public void setHeight(int height) {this.height = height;}
+	public void setHeight(int height) {
+		this.height = height;
+		this.r.height = height;
+	}
 	
 	// Width
 	public int getWidth() {return width;}
-	public void setWidth(int width) {this.width = width;}
+	public void setWidth(int width) {
+		this.width = width;
+		this.r.width = width;
+	}
 	
 	//Image
 	public String getImage() {return image;}

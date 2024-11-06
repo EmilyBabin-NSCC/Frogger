@@ -11,6 +11,7 @@ public class GameProperties {
     public static final int TOOL_BAR = 39;
     
     public static final int SCREEN_WIDTH = CHARACTER_STEP * GRID_WIDTH;
+    
     // Adding 28 to the height because the tool bar adds to the total height
     public static final int SCREEN_HEIGHT = CHARACTER_STEP * GRID_HEIGHT + TOOL_BAR;
 }

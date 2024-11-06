@@ -5,6 +5,7 @@ import javax.swing.JOptionPane;
 @SuppressWarnings("unused")
 public class Vehicle extends Sprite implements Runnable {
 	private Boolean moving, collisionDetected = false;
+	private int speed;
 	
 	private Thread thread;
 	private JLabel vehicleLabel, frogLabel;
@@ -35,6 +36,16 @@ public class Vehicle extends Sprite implements Runnable {
 		vehicleLabel.setLocation(x, y);;
 	}
 	
+	public Vehicle(int x, int y, int height, int width, int speed) {
+		this.x = x;
+		this.y = y;
+		this.height = height;
+		this.width = width;
+		this.speed = speed;
+		vehicleLabel.setSize(width, height);
+		vehicleLabel.setLocation(x, y);;
+	}
+	
 	public Boolean getMoving() {
 		return moving;
 	}
@@ -43,12 +54,16 @@ public class Vehicle extends Sprite implements Runnable {
 		this.moving = moving;
 	}
 	
+	public void setFrogger(Frogger game) {
+		this.game = game;
+	}
+	
 	
 	@Override
 	public void run() {
 		while (this.moving) {
 			int x = this.x;
-			x += 25;
+			x += 50;
 			if ( x >= GameProperties.SCREEN_WIDTH) { x =- 1 * this.width;}
 			
 			this.setX(x);
@@ -72,6 +87,7 @@ public class Vehicle extends Sprite implements Runnable {
 	public void startThread() {
 		thread = new Thread(this, "Vehicle Thread");
 		thread.start();
+		this.moving = true;
 	}
 	
 	public void setVehicleLabel(JLabel temp) {vehicleLabel = temp;}
@@ -80,13 +96,14 @@ public class Vehicle extends Sprite implements Runnable {
 	
 	public void setFrogLabel(JLabel temp) {frogLabel = temp;}
 	
-	public Boolean collided() {
-		return collisionDetected;
-	}
+//	public Boolean collided() {
+//		return collisionDetected;
+//	}
 	
 	private void detectCollision() {
 		// If Vehicle's Rectangle intersects with Frog's Rectangle:
 		if (r.intersects(frog.getRectangle())) {
+			System.out.println("Collision detected!");
 			this.moving = false;
 			this.collisionDetected = true;
 			game.endGameSequence();
