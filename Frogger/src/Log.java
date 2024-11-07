@@ -84,4 +84,6 @@ public class Log extends Sprite implements Runnable {
 	
 	// Stop Thread
 	public void stopThread() {this.moving = false;}
+
+	public Thread getThread() {return thread;}
 }

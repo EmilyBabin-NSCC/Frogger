@@ -8,20 +8,25 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
-@SuppressWarnings({"unused", "serial"})
+@SuppressWarnings({"serial"})
 public class Frogger extends JFrame implements KeyListener, ActionListener {
 	private Frog frog;
-	private Vehicle vehicle;
 	private Vehicle[] vehicles;
 	private Log log;
 	
 	private Container content;
-	private JLabel frogLabel, roadLabel, grassLabel, waterLabel, vehicleLabel, logLabel;
-	private ImageIcon frogImage, roadImage, grassImage, waterImage, vehicleImage, logImage;
+	private JLabel frogLabel, logLabel;
+	private ImageIcon frogImage, vehicleImage, logImage;
 
 	private int screenWidth = GameProperties.SCREEN_WIDTH;
 	private int screenHeight = GameProperties.SCREEN_HEIGHT;
 	private int charStep = GameProperties.CHARACTER_STEP;
+	
+	private int[] lane = {450, 500, 550, 600};
+	
+	private int[][] vehiclesArray;
+	
+//	private int winGrass = 50;
 	
 	// Used to prioritize which graphic elements sit on top of each other 
 	// so the frog isn't behind the background
@@ -38,18 +43,16 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		content.setFocusable(true);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
+		vehiclesArray = new int[][] {
+			{lane[0], 5, 10},  // Lane 1 | #ofVehicles | Speed
+			{lane[1], 3, 20},  // Lane 2 | #ofVehicles | Speed
+			{lane[2], 4, -10}, // Lane 3 | #ofVehicles | Speed
+			{lane[3], 4, -15}  // Lane 4 | #ofVehicles | Speed
+		};
+		
 		// Initializing Objects
 		createFrog();
-		
-		// CarCount | Row | Speed | 
-		createVehicles(5, 450, 20);
-		createVehicles(2, 500, 50);
-		createVehicles(4, 550, -20);
-		createVehicles(3, 600, -30);
-		
-//		checkCollisions();
-		
-//		initializeVehicles();
+		createVehicles();
 		createLog();
 		
 		// Setting Background
@@ -65,8 +68,6 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 	// Keyboard Input
 	public void keyPressed(KeyEvent e) {
 		// Move Frog with Arrow Keys or WASD
-		int x = frog.getX();
-		int y = frog.getY();
 		int key = e.getKeyCode();
 
 		// Up / W
@@ -95,12 +96,18 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 
 	// TODO - Finish Implementing this properly
 	public void endGameSequence() {
-		System.out.println("Game Over");
-		log.setMoving(false);
-//		vehicle.setMoving(false);
-		for (Vehicle v : vehicles) {
-	        v.setMoving(false);
-	    }
+		 System.out.println("Game Over");
+
+		 log.stopThread();
+		 
+		  if (vehicles != null) {
+		        for (Vehicle vehicle : vehicles) {
+		            if (vehicle != null) {
+		                vehicle.stopThread();
+		            }
+		        }
+		  }
+	  
 	}
 	
 	// Retrieve Image from Image Folder
@@ -221,51 +228,63 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		content.setComponentZOrder(frogLabel, count++);
 	}
 	
-	private void checkCollisions() {
-	    for (Vehicle vehicle : vehicles) {
-	        if (frog.isCollidingWith(vehicle)) {
-	            endGameSequence();  // End the game if there's a collision
-	        }
-	    }
-	}
-
 	// Creates Vehicle Objects
-	private void createVehicles(int vehCount, int vehRow, int speed) {
-		vehicles = new Vehicle[vehCount];
-		int xPos = 0;
-
-		for (int i = 0; i < vehCount; i++) {
-			Vehicle vehicle = new Vehicle();
-			JLabel vehLabel = new JLabel();
-			int increment = GameProperties.SCREEN_WIDTH / vehCount;
+	private void createVehicles() {
+		// Counts the total number of vehicles
+		int totalVehicles = 0;
+		for (int i = 0; i < vehiclesArray.length; i++) {
+			totalVehicles += vehiclesArray[i][1]; 
+		}
 		
-			vehicle.setX(xPos);
-			xPos += increment;
+		// Creates an array of vehicles = # of total vehicles
+		vehicles = new Vehicle[totalVehicles];
+		int vehicleIndex = 0; 
+		
+		// For each Lane
+		for (int i = 0; i < vehiclesArray.length; i++) {
+			int xPos = 0;
+			// Used to equally separate the vehicles
+			int increment = GameProperties.SCREEN_WIDTH / vehiclesArray[i][1];
 			
+			// For each car in lane
+			for (int j = 0; j < vehiclesArray[i][1]; j++) {
+				Vehicle vehicle = new Vehicle();
+				JLabel vehLabel = new JLabel();
 				
-			vehicle.setY(vehRow);
+				// X | Y
+				vehicle.setX(xPos);
+				vehicle.setY(vehiclesArray[i][0]);
 				
-			vehicle.setHeight(50);	
-			vehicle.setWidth(50);
-	
-			vehicle.setImage("vehicle1.png");
-			vehicleImage = setImage(vehicle.getImage());
-			loadImgOntoLabel(vehLabel, vehicleImage, vehicle);
+				// H | W
+				vehicle.setHeight(50);	
+				vehicle.setWidth(50);
+				
+				// Image
+				vehicle.setImage("vehicle1.png");
+				vehicleImage = setImage(vehicle.getImage());
+				loadImgOntoLabel(vehLabel, vehicleImage, vehicle);
+				
+				// Speed
+				vehicle.setSpeed(vehiclesArray[i][2]);
+				
+				// Moving | Frogger
+				vehicle.setMoving(true);
+				vehicle.setFrogger(this);
+				
+				// VehLabel | Frog | FrogLabel
+				vehicle.setVehicleLabel(vehLabel);
+				vehicle.setFrog(frog);
+				vehicle.setFrogLabel(frogLabel);
 		
-			vehicle.setSpeed(speed);
+				// Start Thread
+				vehicle.startThread();
 				
-			vehicle.setMoving(true);
-			vehicle.setFrogger(this);
-		
-			vehicle.setVehicleLabel(vehLabel);
-			vehicle.setFrog(frog);
-			vehicle.setFrogLabel(frogLabel);
-	
-			vehicle.startThread();
-
-			vehicles[i] = vehicle;
-			
-			content.setComponentZOrder(vehLabel, count++);
+				// Adding Vehicles to Array | Incrementing X Position
+				vehicles[vehicleIndex++] = vehicle;
+				xPos += increment;
+				
+				content.setComponentZOrder(vehLabel, count++);
+			}
 		}
 	}
 	
@@ -305,15 +324,7 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 	}
 
 	// Sets Background - Temporary
-	// Temporary Method to Setting Background
-	public void setBackground() {
-		grassLabel = new JLabel();
-		waterLabel = new JLabel();
-		roadLabel = new JLabel();
-		grassImage = setImage("grass1.png");
-		waterImage = setImage("water1.png");
-		roadImage = setImage("road1.png");
-		
+	public void setBackground() {		
 		// This is a temporary setup
 		// Grass
 		// Y: 0 to 50
@@ -466,13 +477,10 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 	}
 	
 	// Unused Events
-	
-	// Unused Events
 	@Override
 	public void keyReleased(KeyEvent e) {}
 	@Override
 	public void actionPerformed(ActionEvent e) {}
 	@Override
 	public void keyTyped(KeyEvent e) {}
-	
 }

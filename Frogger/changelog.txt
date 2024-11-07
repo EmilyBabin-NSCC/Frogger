@@ -70,8 +70,17 @@ v0.2
 - Fixed Vehicles moving left that wouldn't loop
 - Frog can only loop screen left to right if he's on the grass
 
+----------------------------
+v0.2.1
 
+- Set all Vehicles to be initialized in the same instance so when the frog
+	collides with one vehicle, they all stop
+- Cleaned up extra code
+- Set up an array to hold the y values of the road lanes
+	(So I don't have to keep counting pixels to reference the road lane)
+- Removed unused suppress from Frogger
 
+----------------------------
 
 
 

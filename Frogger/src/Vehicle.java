@@ -90,6 +90,8 @@ public class Vehicle extends Sprite implements Runnable {
 		
 	}
 	
+	  public Thread getThread() { return thread; }
+	
 	// Start Thread
 	public void startThread() {
 		thread = new Thread(this, "Vehicle Thread");
