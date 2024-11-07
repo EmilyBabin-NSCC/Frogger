@@ -12,6 +12,7 @@ import javax.swing.JLabel;
 public class Frogger extends JFrame implements KeyListener, ActionListener {
 	private Frog frog;
 	private Vehicle vehicle;
+	private Vehicle[] vehicles;
 	private Log log;
 	
 	private Container content;
@@ -39,7 +40,16 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		
 		// Initializing Objects
 		createFrog();
-		createVehicle();
+		
+		// CarCount | Row | Speed | 
+		createVehicles(5, 450, 20);
+		createVehicles(2, 500, 50);
+		createVehicles(4, 550, -20);
+		createVehicles(3, 600, -30);
+		
+//		checkCollisions();
+		
+//		initializeVehicles();
 		createLog();
 		
 		// Setting Background
@@ -73,8 +83,7 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 
 		// Escape Key closes the game
 		else if (key == KeyEvent.VK_ESCAPE) {
-			vehicle.setMoving(false);
-			log.setMoving(false);
+			endGameSequence();
 			dispose();
 			System.out.println("Exiting Game... ");
 		}
@@ -88,7 +97,10 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 	public void endGameSequence() {
 		System.out.println("Game Over");
 		log.setMoving(false);
-		vehicle.setMoving(false);
+//		vehicle.setMoving(false);
+		for (Vehicle v : vehicles) {
+	        v.setMoving(false);
+	    }
 	}
 	
 	// Retrieve Image from Image Folder
@@ -209,41 +221,56 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		content.setComponentZOrder(frogLabel, count++);
 	}
 	
-	// Creates Vehicle Object
-	private void createVehicle() {
-		vehicle = new Vehicle();
-		vehicleLabel = new JLabel();
-		
-		// X Y
-		vehicle.setX(50);
-		vehicle.setY(600);
-		
-		// H W
-		vehicle.setHeight(50);
-		vehicle.setWidth(50);
-		
-		// Image
-		vehicle.setImage("vehicle1.png");
-		vehicleImage = setImage(vehicle.getImage());
-		loadImgOntoLabel(vehicleLabel, vehicleImage, vehicle);
-		
-		// Moving | Game
-		vehicle.setMoving(true);
-		vehicle.setFrogger(this);
-		
-		// Label | Frog
-		vehicle.setVehicleLabel(vehicleLabel);
-		vehicle.setFrog(frog);
-		vehicle.setFrogLabel(frogLabel);
-		
-		vehicle.startThread();
-		
-		content.setComponentZOrder(vehicleLabel, count++);
-		
+	private void checkCollisions() {
+	    for (Vehicle vehicle : vehicles) {
+	        if (frog.isCollidingWith(vehicle)) {
+	            endGameSequence();  // End the game if there's a collision
+	        }
+	    }
 	}
 
-	// Creates Log Object
-	private void createLog() {
+	// Creates Vehicle Objects
+	private void createVehicles(int vehCount, int vehRow, int speed) {
+		vehicles = new Vehicle[vehCount];
+		int xPos = 0;
+
+		for (int i = 0; i < vehCount; i++) {
+			Vehicle vehicle = new Vehicle();
+			JLabel vehLabel = new JLabel();
+			int increment = GameProperties.SCREEN_WIDTH / vehCount;
+		
+			vehicle.setX(xPos);
+			xPos += increment;
+			
+				
+			vehicle.setY(vehRow);
+				
+			vehicle.setHeight(50);	
+			vehicle.setWidth(50);
+	
+			vehicle.setImage("vehicle1.png");
+			vehicleImage = setImage(vehicle.getImage());
+			loadImgOntoLabel(vehLabel, vehicleImage, vehicle);
+		
+			vehicle.setSpeed(speed);
+				
+			vehicle.setMoving(true);
+			vehicle.setFrogger(this);
+		
+			vehicle.setVehicleLabel(vehLabel);
+			vehicle.setFrog(frog);
+			vehicle.setFrogLabel(frogLabel);
+	
+			vehicle.startThread();
+
+			vehicles[i] = vehicle;
+			
+			content.setComponentZOrder(vehLabel, count++);
+		}
+	}
+	
+	// Creates One Log Object
+ 	private void createLog() {
 		log = new Log();
 		logLabel = new JLabel();
 		

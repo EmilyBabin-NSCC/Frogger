@@ -21,9 +21,9 @@ public class Frog extends Sprite {
 	public void setGame(Frogger frogger) {this.frogger = frogger;}
 
 	// Checks if Frog Collides with Log
-	public Boolean isCollidingWith(Log log) {	
+	public Boolean isCollidingWith(Sprite sprite) {
 		Rectangle frogRect = new Rectangle(this.getX(), this.getY(), this.getWidth(), this.getHeight());
-	    Rectangle logRect = new Rectangle(log.getX(), log.getY(), log.getWidth(), log.getHeight());
+	    Rectangle logRect = new Rectangle(sprite.getX(), sprite.getY(), sprite.getWidth(), sprite.getHeight());
 	    
 	    return frogRect.intersects(logRect);
 	}

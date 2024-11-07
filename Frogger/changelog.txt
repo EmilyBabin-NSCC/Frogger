@@ -63,6 +63,12 @@ v0.1.5
 - Cleaned Vehicle.java
 
 ----------------------------
+v0.2
+
+- Created an array of vehicles
+- Edited Vehicle class to include speed
+- Fixed Vehicles moving left that wouldn't loop
+- Frog can only loop screen left to right if he's on the grass
 
 
 
