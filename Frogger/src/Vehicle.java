@@ -52,20 +52,6 @@ public class Vehicle extends Sprite implements Runnable {
 	public JLabel getFrogLabel() {return frogLabel;}
 	public void setFrogLabel(JLabel temp) {frogLabel = temp;}
 	
-	public void updatePosition() {
-	    int x = getX() + speed;
-	    
-	    // Wrap vehicle around screen
-	    if (x > GameProperties.SCREEN_WIDTH) {
-	        x = -getWidth();  // Move to the left side of the screen
-	    } else if (x < -getWidth()) {
-	        x = GameProperties.SCREEN_WIDTH;  // Move to the right side of the screen
-	    }
-
-	    setX(x);
-	    vehicleLabel.setLocation(x, getY());
-	}
-	
 	// Thread
 	@Override
 	public void run() {

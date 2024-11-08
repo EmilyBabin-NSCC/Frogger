@@ -81,7 +81,20 @@ v0.2.1
 - Removed unused suppress from Frogger
 
 ----------------------------
+v0.3
 
+- Edited frog.isCollidingWith to be more abstract than just logs
+- Added an array to hold y values of the water lanes
+- Temporarily removed log functionality as it was breaking
+- Fixed Log speeds
+- Allowed logs to loop depending on which direction they're going
+- Fixed broken log functionality
+- Fixed water threshold not being correct
+- Added a break to the log collision detection
+	- game was expecting frog to be on all of the logs for collision detection
+	- break finds the first log frog is on and stops looking for logs
+	
+----------------------------
 
 
 

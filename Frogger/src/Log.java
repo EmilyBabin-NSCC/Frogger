@@ -57,9 +57,11 @@ public class Log extends Sprite implements Runnable {
 	public void run() {
 		while (this.moving) {
 			int x = this.x;
-			x += 25;
-			if (x >= GameProperties.SCREEN_WIDTH) {x =-1 * this.width;}
-			
+			x += speed;
+			// Loops the log properly depending on if its moving left or right
+			if (speed > 0 && x >= GameProperties.SCREEN_WIDTH) {x =- 1 * this.width;}
+			else if (speed < 0 && x < 0 - this.width) {x = GameProperties.SCREEN_WIDTH + this.width;}
+						
 			this.setX(x);
 			logLabel.setLocation(this.x, this.y);
 

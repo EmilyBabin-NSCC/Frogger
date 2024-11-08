@@ -20,11 +20,11 @@ public class Frog extends Sprite {
 	public Frogger getFrogger() {return frogger;}
 	public void setGame(Frogger frogger) {this.frogger = frogger;}
 
-	// Checks if Frog Collides with Log
-	public Boolean isCollidingWith(Sprite sprite) {
+	// Checks if Frog is Colliding with Something
+	public Boolean isCollidingWith(Log sprite) {
 		Rectangle frogRect = new Rectangle(this.getX(), this.getY(), this.getWidth(), this.getHeight());
-	    Rectangle logRect = new Rectangle(sprite.getX(), sprite.getY(), sprite.getWidth(), sprite.getHeight());
+	    Rectangle spriteRect = new Rectangle(sprite.getX(), sprite.getY(), sprite.getWidth(), sprite.getHeight());
 	    
-	    return frogRect.intersects(logRect);
+	    return frogRect.intersects(spriteRect);
 	}
 }

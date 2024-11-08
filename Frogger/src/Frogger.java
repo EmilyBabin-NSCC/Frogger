@@ -12,19 +12,22 @@ import javax.swing.JLabel;
 public class Frogger extends JFrame implements KeyListener, ActionListener {
 	private Frog frog;
 	private Vehicle[] vehicles;
-	private Log log;
+//	private Log log;
+	private Log[] logs;
 	
 	private Container content;
-	private JLabel frogLabel, logLabel;
+	private JLabel frogLabel;
 	private ImageIcon frogImage, vehicleImage, logImage;
 
 	private int screenWidth = GameProperties.SCREEN_WIDTH;
 	private int screenHeight = GameProperties.SCREEN_HEIGHT;
 	private int charStep = GameProperties.CHARACTER_STEP;
 	
-	private int[] lane = {450, 500, 550, 600};
+	private int[] roadLane = {450, 500, 550, 600};
+	private int[] waterLane = {100, 150, 200, 250, 300};
 	
 	private int[][] vehiclesArray;
+	private int[][] logsArray;
 	
 //	private int winGrass = 50;
 	
@@ -43,17 +46,25 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		content.setFocusable(true);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
-		vehiclesArray = new int[][] {
-			{lane[0], 5, 10},  // Lane 1 | #ofVehicles | Speed
-			{lane[1], 3, 20},  // Lane 2 | #ofVehicles | Speed
-			{lane[2], 4, -10}, // Lane 3 | #ofVehicles | Speed
-			{lane[3], 4, -15}  // Lane 4 | #ofVehicles | Speed
+		vehiclesArray = new int[][] { 	// Road
+			{roadLane[0], 3, 10},  		// Lane 1 | #ofVehicles | Speed
+			{roadLane[1], 2, 30},  		// Lane 2 | #ofVehicles | Speed
+			{roadLane[2], 3, -10}, 		// Lane 3 | #ofVehicles | Speed
+			{roadLane[3], 4, -15}  		// Lane 4 | #ofVehicles | Speed
+		};
+		
+		logsArray = new int[][] {   // Water
+			{waterLane[0], 3, 30},  // Lane 1 | #of Logs | Speed
+			{waterLane[1], 4, -25},	// Lane 2 | #of Logs | Speed
+			{waterLane[2], 5, 15},	// Lane 3 | #of Logs | Speed
+			{waterLane[3], 2, -30},	// Lane 4 | #of Logs | Speed
+			{waterLane[4], 3, 20}   // Lane 5 | #of Logs | Speed
 		};
 		
 		// Initializing Objects
 		createFrog();
 		createVehicles();
-		createLog();
+		createLogs();
 		
 		// Setting Background
 		setBackground();	
@@ -98,7 +109,13 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 	public void endGameSequence() {
 		 System.out.println("Game Over");
 
-		 log.stopThread();
+		 if (logs != null) {
+		        for (Log log : logs) {
+		            if (log != null) {
+		                log.stopThread();
+		            }
+		        }
+		  }
 		 
 		  if (vehicles != null) {
 		        for (Vehicle vehicle : vehicles) {
@@ -174,24 +191,30 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		frog.setX(x);
 	}
 	
-	// Log & Frog Collision Detection
 	public void detectLogCollision() {
-		// If Frog is Colliding with Log
-		if (frog.isCollidingWith(log)) {
-			// Set Frog's X = Log's X
-			frog.setX(log.getX());
-			frogLabel.setLocation(frog.getX(), frog.getY());
-		} 
+		boolean onLog = false;
+
+	    for (Log log : logs) {
+	        if (log != null) {
+	            if (frog.isCollidingWith(log)) {
+	                frog.setX(log.getX());
+	                frogLabel.setLocation(log.getX(), log.getY());
+	                onLog = true; 
+	                break;
+	            }
+	        }
+	    }
+
+	    // If the frog is in water and not on any log, end the game
+	    if (isInWater(frog.getY()) && !onLog) {
+	        endGameSequence();
+	    }
 		
-		// End Game if Frog isn't colliding with log
-		else if (isInWater(frog.getY())) {
-			endGameSequence();
-		}
 	}
 
 	// Checks if Frog is in Water
 	private Boolean isInWater(int y) {
-		return y > 100 && y < 350;
+		return y >= 100 && y < 350;
 	}
 	
 	// Checks if Frog is on Grass
@@ -287,42 +310,66 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 			}
 		}
 	}
-	
-	// Creates One Log Object
- 	private void createLog() {
-		log = new Log();
-		logLabel = new JLabel();
-		
-		// X Y
-		log.setX(100);
-		log.setY(300);
-		
-		// H W
-		log.setHeight(50);
-		log.setWidth(50);
-		
-		// Image
-		log.setImage("log1.png");
-		logImage = setImage(log.getImage());
-		loadImgOntoLabel(logLabel, logImage, log);
-		
-		// Moving | Game
-		log.setMoving(true);
-		log.setFrogger(this);
-		
-		// Speed
-		log.setSpeed(25);
-		
-		// Label | Frog
-		log.setLogLabel(logLabel);
-		log.setFrog(frog);
-		log.setFrogLabel(frogLabel);
-		
-		log.startThread();
-		
-		content.setComponentZOrder(logLabel, count++);
-	}
 
+ 	private void createLogs() {
+ 		int totalLogs = 0;
+ 		for (int i = 0; i < logsArray.length; i++) {
+			totalLogs += logsArray[i][1]; 
+		}
+		
+		// Creates an array of logs = # of total logs
+		logs = new Log[totalLogs];
+		int logIndex = 0;
+		
+		// For each Lane
+		for (int i = 0; i < logsArray.length; i++) {
+			int xPos = 0;
+			// Used to equally separate the logs
+			int increment = GameProperties.SCREEN_WIDTH / logsArray[i][1];
+			
+			// For each log in lane
+			for (int j = 0; j < logsArray[i][1]; j++) {
+				Log log = new Log();
+				JLabel logLabel = new JLabel();
+			
+				// X | Y
+				log.setX(xPos);
+				log.setY(logsArray[i][0]);
+				
+				// H | W
+				log.setHeight(50);	
+				log.setWidth(50);
+				
+				// Image
+				log.setImage("log1.png");
+				logImage = setImage(log.getImage());
+				loadImgOntoLabel(logLabel, logImage, log);
+				
+				// Speed
+				log.setSpeed(logsArray[i][2]);
+				
+				// Moving | Frogger
+				log.setMoving(true);
+				log.setFrogger(this);
+				
+				// logLabel | Frog | FrogLabel
+				log.setLogLabel(logLabel);
+				log.setFrog(frog);
+				log.setFrogLabel(frogLabel);
+		
+				// Start Thread
+				log.startThread();
+				
+				// Adding Logs to Array | Incrementing X Position
+				logs[logIndex++] = log;
+				xPos += increment;
+				
+				content.setComponentZOrder(logLabel, count++);
+			}
+		}
+		
+ 	}
+ 	
 	// Sets Background - Temporary
 	public void setBackground() {		
 		// This is a temporary setup
