@@ -1,4 +1,6 @@
+import java.awt.Color;
 import java.awt.Container;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -10,30 +12,36 @@ import javax.swing.JLabel;
 
 @SuppressWarnings({"serial"})
 public class Frogger extends JFrame implements KeyListener, ActionListener {
+	// Objects
 	private Frog frog;
 	private Vehicle[] vehicles;
-//	private Log log;
 	private Log[] logs;
-	
-	private Container content;
-	private JLabel frogLabel;
-	private ImageIcon frogImage, vehicleImage, logImage;
-
-	private int screenWidth = GameProperties.SCREEN_WIDTH;
-	private int screenHeight = GameProperties.SCREEN_HEIGHT;
-	private int charStep = GameProperties.CHARACTER_STEP;
-	
-	private int[] roadLane = {450, 500, 550, 600};
-	private int[] waterLane = {100, 150, 200, 250, 300};
 	
 	private int[][] vehiclesArray;
 	private int[][] logsArray;
 	
-//	private int winGrass = 50;
+	// Graphics
+	private Container content;
+	private JLabel frogLabel, scoreLabel;
+	private ImageIcon frogImage, vehicleImage, logImage;
+
+	// Shortcuts
+	private int screenWidth = GameProperties.SCREEN_WIDTH;
+	private int screenHeight = GameProperties.SCREEN_HEIGHT;
+	private int charStep = GameProperties.CHARACTER_STEP;
+	private int gridWidth = GameProperties.GRID_WIDTH;
+	
+	// Coordinates
+	private int[] roadLane = {450, 500, 550, 600};
+	private int[] waterLane = {100, 150, 200, 250, 300};
+	private int winGrass = 50;
 	
 	// Used to prioritize which graphic elements sit on top of each other 
 	// so the frog isn't behind the background
 	private int count = 0;
+	
+	private Boolean gameOver = false;
+	private int score = 0;
 	
 	public Frogger() {
 		// Setting the GUI window
@@ -46,14 +54,14 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		content.setFocusable(true);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
-		vehiclesArray = new int[][] { 	// Road
-			{roadLane[0], 3, 10},  		// Lane 1 | #ofVehicles | Speed
-			{roadLane[1], 2, 30},  		// Lane 2 | #ofVehicles | Speed
-			{roadLane[2], 3, -10}, 		// Lane 3 | #ofVehicles | Speed
-			{roadLane[3], 4, -15}  		// Lane 4 | #ofVehicles | Speed
+		vehiclesArray = new int[][] { 	// Cars on Road
+			{roadLane[0], 5, 10},  		// Lane 1 | #ofVehicles | Speed
+			{roadLane[1], 3, 30},  		// Lane 2 | #ofVehicles | Speed
+			{roadLane[2], 4, -10}, 		// Lane 3 | #ofVehicles | Speed
+			{roadLane[3], 2, -15}  		// Lane 4 | #ofVehicles | Speed
 		};
 		
-		logsArray = new int[][] {   // Water
+		logsArray = new int[][] {   // Logs in Water
 			{waterLane[0], 3, 30},  // Lane 1 | #of Logs | Speed
 			{waterLane[1], 4, -25},	// Lane 2 | #of Logs | Speed
 			{waterLane[2], 5, 15},	// Lane 3 | #of Logs | Speed
@@ -61,13 +69,22 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 			{waterLane[4], 3, 20}   // Lane 5 | #of Logs | Speed
 		};
 		
+		scoreLabel = new JLabel();
+		scoreLabel.setText("Score: " + score);
+		scoreLabel.setFont(new Font("Calibri", Font.BOLD, 20));
+		scoreLabel.setForeground(Color.white);
+		scoreLabel.setBounds(550, 0, 500, 50);
+		content.add(scoreLabel);
+		content.setComponentZOrder(scoreLabel, count++);
+		
 		// Initializing Objects
 		createFrog();
 		createVehicles();
 		createLogs();
 		
 		// Setting Background
-		setBackground();	
+		setBackground();
+
 	}
 	
 	// Main
@@ -105,30 +122,49 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		frogLabel.setLocation(frog.getX(), frog.getY());
 	}
 
-	// TODO - Finish Implementing this properly
+	// End Game
 	public void endGameSequence() {
-		 System.out.println("Game Over");
-
 		 if (logs != null) {
-		        for (Log log : logs) {
-		            if (log != null) {
-		                log.stopThread();
-		            }
-		        }
-		  }
-		 
-		  if (vehicles != null) {
-		        for (Vehicle vehicle : vehicles) {
-		            if (vehicle != null) {
-		                vehicle.stopThread();
-		            }
-		        }
-		  }
-	  
+	        for (Log log : logs) {
+	        	if (log != null) {log.stopThread();}
+        	}
+		 }
+  
+		 for (Vehicle vehicle : vehicles) {
+            if (vehicle != null) {vehicle.stopThread();}
+		 }
+	}
+	
+	public void gameOver() {
+		System.out.println("Game Over");
+		score -= 50;
+		updateScore();
+		gameOver = true;
+		endGameSequence();
+	}
+	
+	public void gameWin() {
+		if (frog.getY() == winGrass && gameOver == false) {
+			gameOver = true;
+			System.out.println("Game Win!");
+			frog.setY(650);
+			score += 50;
+			updateScore();
+			endGameSequence();
+		}
+		
+	}
+	
+	public void gameRestart() {
+		gameOver = false;
+	}
+	
+	public void updateScore() {
+		scoreLabel.setText("Score: " + score);
 	}
 	
 	// Retrieve Image from Image Folder
-	public ImageIcon setImage(String fileName) {
+ 	public ImageIcon setImage(String fileName) {
 		return new ImageIcon(getClass().getResource("images/" + fileName));
 	}
 	
@@ -151,16 +187,21 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 	// Frog Movement
 	public void moveUp() {
 		int y = frog.getY();
-		y -= GameProperties.CHARACTER_STEP;
-		if (y <= 0) {y = 0;} // Prevented from moving off screen top
+		y -= charStep;
+		if (y <= 50) {y = 50;} // Prevented from moving off screen top
 		frog.setY(y);
+		
+		if (y == winGrass) {
+			gameWin();
+		}
+		
 	}
 	public void moveDown() {
 		int y = frog.getY();
-		y += GameProperties.CHARACTER_STEP;
+		y += charStep;
 		// Prevents player from moving off bottom screen
-		if (y >= GameProperties.SCREEN_HEIGHT - GameProperties.TOOL_BAR - frog.getHeight()) {
-			y = GameProperties.SCREEN_HEIGHT - GameProperties.TOOL_BAR - frog.getHeight();
+		if (y >= screenHeight - GameProperties.TOOL_BAR - frog.getHeight()) {
+			y = screenHeight - GameProperties.TOOL_BAR - frog.getHeight();
 		}
 		frog.setY(y);
 	}
@@ -168,10 +209,10 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		int x = frog.getX();
 		int y = frog.getY();
 		
-		x -= GameProperties.CHARACTER_STEP;
+		x -= charStep;
 		
 		// Frog Loops only on Grass
-		if (isOnGrass(y)) {if (x + frog.getWidth() <= 0) {x = GameProperties.SCREEN_WIDTH;}} 
+		if (isOnGrass(y)) {if (x + frog.getWidth() <= 0) {x = screenWidth;}} 
 		else {if (x < 0) { x = 0;}}
 		
 		frog.setX(x);
@@ -179,8 +220,6 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 	public void moveRight() {
 		int x = frog.getX();
 		int y = frog.getY();
-		int charStep = GameProperties.CHARACTER_STEP;
-		int screenWidth = GameProperties.SCREEN_WIDTH;
 		
 		x += charStep;
 	
@@ -206,8 +245,9 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 	    }
 
 	    // If the frog is in water and not on any log, end the game
-	    if (isInWater(frog.getY()) && !onLog) {
-	        endGameSequence();
+	    if (isInWater(frog.getY()) && !onLog && gameOver != true) {
+	    	gameOver = true;
+	        gameOver();
 	    }
 		
 	}
@@ -267,7 +307,7 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		for (int i = 0; i < vehiclesArray.length; i++) {
 			int xPos = 0;
 			// Used to equally separate the vehicles
-			int increment = GameProperties.SCREEN_WIDTH / vehiclesArray[i][1];
+			int increment = screenWidth / vehiclesArray[i][1];
 			
 			// For each car in lane
 			for (int j = 0; j < vehiclesArray[i][1]; j++) {
@@ -325,7 +365,7 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		for (int i = 0; i < logsArray.length; i++) {
 			int xPos = 0;
 			// Used to equally separate the logs
-			int increment = GameProperties.SCREEN_WIDTH / logsArray[i][1];
+			int increment = screenWidth / logsArray[i][1];
 			
 			// For each log in lane
 			for (int j = 0; j < logsArray[i][1]; j++) {
@@ -375,16 +415,16 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		// This is a temporary setup
 		// Grass
 		// Y: 0 to 50
-		for (int i =0; i < GameProperties.GRID_WIDTH; i++) {
+		for (int i =0; i < gridWidth; i++) {
 			JLabel label = new JLabel();
-			ImageIcon image = setImage("grass1.png");
+			ImageIcon image = setImage("frame1.png");
 			loadBackgroundImage(label, image, 50, 50, i *50, 0);
 			content.add(label);
 			content.setComponentZOrder(label, count++);
 		}
 		
 		// Y: 50 to 100
-		for (int i =0; i < GameProperties.GRID_WIDTH; i++) {
+		for (int i =0; i < gridWidth; i++) {
 			JLabel label = new JLabel();
 			ImageIcon image = setImage("grass1.png");
 			loadBackgroundImage(label, image, 50, 50, i *50, 50);
@@ -394,7 +434,7 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		
 		// Water
 		// Y: 100 to 150
-		for (int i =0; i < GameProperties.GRID_WIDTH; i++) {
+		for (int i =0; i < gridWidth; i++) {
 			JLabel label = new JLabel();
 			ImageIcon image = setImage("water1.png");
 			loadBackgroundImage(label, image, 50, 50, i *50, 100);
@@ -403,7 +443,7 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		}
 		
 		// Y: 150 to 200
-		for (int i =0; i < GameProperties.GRID_WIDTH; i++) {
+		for (int i =0; i < gridWidth; i++) {
 			JLabel label = new JLabel();
 			ImageIcon image = setImage("water1.png");
 			loadBackgroundImage(label, image, 50, 50, i *50, 150);
@@ -412,7 +452,7 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		}
 		
 		// Y: 200 to 250
-		for (int i =0; i < GameProperties.GRID_WIDTH; i++) {
+		for (int i =0; i < gridWidth; i++) {
 			JLabel label = new JLabel();
 			ImageIcon image = setImage("water1.png");
 			loadBackgroundImage(label, image, 50, 50, i *50, 200);
@@ -421,7 +461,7 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		}
 		
 		// Y: 250 to 300
-		for (int i =0; i < GameProperties.GRID_WIDTH; i++) {
+		for (int i =0; i < gridWidth; i++) {
 			JLabel label = new JLabel();
 			ImageIcon image = setImage("water1.png");
 			loadBackgroundImage(label, image, 50, 50, i *50, 250);
@@ -430,7 +470,7 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		}
 		
 		// Y: 300 to 350
-		for (int i =0; i < GameProperties.GRID_WIDTH; i++) {
+		for (int i =0; i < gridWidth; i++) {
 			JLabel label = new JLabel();
 			ImageIcon image = setImage("water1.png");
 			loadBackgroundImage(label, image, 50, 50, i *50, 300);
@@ -440,7 +480,7 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		
 		// Grass
 		// Y: 350 to 400
-		for (int i =0; i < GameProperties.GRID_WIDTH; i++) {
+		for (int i =0; i < gridWidth; i++) {
 			JLabel label = new JLabel();
 			ImageIcon image = setImage("grass1.png");
 			loadBackgroundImage(label, image, 50, 50, i *50, 350);
@@ -449,7 +489,7 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		}
 		
 		// Y: 400 to 450
-		for (int i =0; i < GameProperties.GRID_WIDTH; i++) {
+		for (int i =0; i < gridWidth; i++) {
 			JLabel label = new JLabel();
 			ImageIcon image = setImage("grass1.png");
 			loadBackgroundImage(label, image, 50, 50, i *50, 400);
@@ -459,7 +499,7 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		
 		// Road
 		// Y: 450 to 500
-		for (int i =0; i < GameProperties.GRID_WIDTH; i++) {
+		for (int i =0; i < gridWidth; i++) {
 			JLabel label = new JLabel();
 			ImageIcon image = setImage("road1.png");
 			loadBackgroundImage(label, image, 50, 50, i *50, 450);
@@ -468,7 +508,7 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		}
 		
 		// Y: 500 to 550
-		for (int i =0; i < GameProperties.GRID_WIDTH; i++) {
+		for (int i =0; i < gridWidth; i++) {
 			JLabel label = new JLabel();
 			ImageIcon image = setImage("road1.png");
 			loadBackgroundImage(label, image, 50, 50, i *50, 500);
@@ -477,7 +517,7 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		}
 		
 		// Y: 550 to 600
-		for (int i =0; i < GameProperties.GRID_WIDTH; i++) {
+		for (int i =0; i < gridWidth; i++) {
 			JLabel label = new JLabel();
 			ImageIcon image = setImage("road1.png");
 			loadBackgroundImage(label, image, 50, 50, i *50, 550);
@@ -486,7 +526,7 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		}
 		
 		// Y: 600 to 650
-		for (int i =0; i < GameProperties.GRID_WIDTH; i++) {
+		for (int i =0; i < gridWidth; i++) {
 			JLabel label = new JLabel();
 			ImageIcon image = setImage("road1.png");
 			loadBackgroundImage(label, image, 50, 50, i *50, 600);
@@ -496,7 +536,7 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		
 		// Grass
 		// Y: 650 to 700
-		for (int i =0; i < GameProperties.GRID_WIDTH; i++) {
+		for (int i =0; i < gridWidth; i++) {
 			JLabel label = new JLabel();
 			ImageIcon image = setImage("grass1.png");
 			loadBackgroundImage(label, image, 50, 50, i *50, 650);
@@ -505,7 +545,7 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		}
 		
 		// Y: 700 to 750
-		for (int i =0; i < GameProperties.GRID_WIDTH; i++) {
+		for (int i =0; i < gridWidth; i++) {
 			JLabel label = new JLabel();
 			ImageIcon image = setImage("grass1.png");
 			loadBackgroundImage(label, image, 50, 50, i *50, 700);
@@ -514,9 +554,9 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		}
 		
 		// Y: 750 to 800
-		for (int i =0; i < GameProperties.GRID_WIDTH; i++) {
+		for (int i =0; i < gridWidth; i++) {
 			JLabel label = new JLabel();
-			ImageIcon image = setImage("grass1.png");
+			ImageIcon image = setImage("frame1.png");
 			loadBackgroundImage(label, image, 50, 50, i *50, 750);
 			content.add(label);
 			content.setComponentZOrder(label, count++);

@@ -67,6 +67,7 @@ public class Vehicle extends Sprite implements Runnable {
 			vehicleLabel.setLocation(this.x, this.y);
 			
 			this.detectCollision();
+			frogger.gameWin();
 
 			try { Thread.sleep(100);}
 			catch (Exception e) {
@@ -93,7 +94,7 @@ public class Vehicle extends Sprite implements Runnable {
 		// If Vehicle's Rectangle intersects with Frog's Rectangle:
 		if (r.intersects(frog.getRectangle())) {
 			this.moving = false;
-			frogger.endGameSequence();		
+			frogger.gameOver();
 		}
 	}
 }

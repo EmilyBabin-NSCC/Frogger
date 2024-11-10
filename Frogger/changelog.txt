@@ -95,10 +95,28 @@ v0.3
 	- break finds the first log frog is on and stops looking for logs
 	
 ----------------------------
+v0.4
 
+- Added Win / Lose Conditions
+- Added placeholder frame1 Image
+- Edited top and bottom grass to a black border
+- Added score label
+- Added score functionality 
+	- -50 lose
+	- +50 win
+- Fixed Win / Lose condition bugs
+	- Losing would sometimes call gameOver() multiple times resulting
+		in an extra low score
+	- Winning stops all threads, but frog can still move, meaning if you
+		get to the end when all the collision detection is turned off,
+		you could just get infinite points
+	- Winning and then hitting esc to close game ran gameWin() multiple 
+		times resulting in an extra high score
+	- Hitting esc to close game ran gameOver() a second time if the
+		game was already lost
+- Removed some unnecessary code
 
-
-
+----------------------------
 
 
 
