@@ -5,10 +5,17 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 
 @SuppressWarnings({"serial"})
 public class Frogger extends JFrame implements KeyListener, ActionListener {
@@ -31,6 +38,9 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 	private int charStep = GameProperties.CHARACTER_STEP;
 	private int gridWidth = GameProperties.GRID_WIDTH;
 	
+	private int frogStartX = charStep * 7;
+	private int frogStartY = 650;
+
 	// Coordinates
 	private int[] roadLane = {450, 500, 550, 600};
 	private int[] waterLane = {100, 150, 200, 250, 300};
@@ -41,12 +51,14 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 	private int count = 0;
 	
 	private Boolean gameOver = false;
+	private Boolean gameWin = false;
 	private int score = 0;
 	
 	public Frogger() {
 		// Setting the GUI window
 		setSize(screenWidth, screenHeight);
 		content = getContentPane();
+		setLocationRelativeTo(null);
 		setResizable(false);
 		setTitle("Frogger");
 		setLayout(null);
@@ -55,18 +67,18 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		vehiclesArray = new int[][] { 	// Cars on Road
-			{roadLane[0], 5, 10},  		// Lane 1 | #ofVehicles | Speed
-			{roadLane[1], 3, 30},  		// Lane 2 | #ofVehicles | Speed
-			{roadLane[2], 4, -10}, 		// Lane 3 | #ofVehicles | Speed
-			{roadLane[3], 2, -15}  		// Lane 4 | #ofVehicles | Speed
+			{roadLane[0], 1, 10},  		// Lane 1 | #ofVehicles | Speed
+			{roadLane[1], 1, 30},  		// Lane 2 | #ofVehicles | Speed
+			{roadLane[2], 1, -10}, 		// Lane 3 | #ofVehicles | Speed
+			{roadLane[3], 1, -15}  		// Lane 4 | #ofVehicles | Speed
 		};
 		
 		logsArray = new int[][] {   // Logs in Water
-			{waterLane[0], 3, 30},  // Lane 1 | #of Logs | Speed
-			{waterLane[1], 4, -25},	// Lane 2 | #of Logs | Speed
+			{waterLane[0], 5, 30},  // Lane 1 | #of Logs | Speed
+			{waterLane[1], 5, -25},	// Lane 2 | #of Logs | Speed
 			{waterLane[2], 5, 15},	// Lane 3 | #of Logs | Speed
-			{waterLane[3], 2, -30},	// Lane 4 | #of Logs | Speed
-			{waterLane[4], 3, 20}   // Lane 5 | #of Logs | Speed
+			{waterLane[3], 5, -30},	// Lane 4 | #of Logs | Speed
+			{waterLane[4], 5, 20}   // Lane 5 | #of Logs | Speed
 		};
 		
 		scoreLabel = new JLabel();
@@ -111,10 +123,13 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		else if (key == KeyEvent.VK_RIGHT || key == KeyEvent.VK_D) {moveRight();}
 
 		// Escape Key closes the game
-		else if (key == KeyEvent.VK_ESCAPE) {
-			endGameSequence();
-			dispose();
-			System.out.println("Exiting Game... ");
+		else if (key == KeyEvent.VK_ESCAPE) {	
+			if (JOptionPane.showConfirmDialog(
+					null, "Are you sure you want to exit? \n Score will not be recorded.", 
+					"", JOptionPane.YES_NO_OPTION) 
+				== JOptionPane.YES_OPTION) {
+				gameClose();
+			}
 		}
 		
 		else {}
@@ -123,13 +138,15 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 	}
 
 	// End Game
-	public void endGameSequence() {
+	public void gameStop() {
+		// End All Log Threads
 		 if (logs != null) {
 	        for (Log log : logs) {
 	        	if (log != null) {log.stopThread();}
         	}
 		 }
   
+		 // End All Vehicle Threads
 		 for (Vehicle vehicle : vehicles) {
             if (vehicle != null) {vehicle.stopThread();}
 		 }
@@ -140,23 +157,141 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		score -= 50;
 		updateScore();
 		gameOver = true;
-		endGameSequence();
+		gameWin = false;
+		gameStop();
+		promptRestart();
 	}
 	
 	public void gameWin() {
 		if (frog.getY() == winGrass && gameOver == false) {
 			gameOver = true;
+			gameWin = true;
 			System.out.println("Game Win!");
-			frog.setY(650);
 			score += 50;
 			updateScore();
-			endGameSequence();
+			gameStop();
+			promptRestart();
 		}
 		
 	}
 	
+	public void promptRestart() {
+		String gameState;
+		if (!gameWin) {gameState = "Game Over";}
+		else {gameState = "You Win!";}
+		
+		if (JOptionPane.showConfirmDialog(
+				null, "Do you want to play again?", 
+				gameState, JOptionPane.YES_NO_OPTION) 
+			== JOptionPane.YES_OPTION) {
+		    System.out.println("Restarting...");
+		    gameRestart();
+		} else {
+			System.out.println("Exiting...");
+			String name = JOptionPane.showInputDialog("Enter your name");
+			System.out.println(name + ": " + score);
+			
+			saveData(name, score);
+			
+			
+			gameClose();
+			
+		}
+	}
+	
+	public void saveData(String name, int score) {
+		Connection conn = null;
+		
+		try {
+			Class.forName("org.sqlite.JDBC");
+			
+			String dbURL = "jdbc:sqlite:frogger.db";
+			conn = DriverManager.getConnection(dbURL);
+			
+			if (conn != null) {
+				
+				DatabaseMetaData db = (DatabaseMetaData) conn.getMetaData();
+				System.out.println("\nConnected to Database");
+				System.out.println("Driver Name: " + db.getDriverName());
+				System.out.println("Driver Version: " + db.getDriverVersion());
+				System.out.println("Product Name: " + db.getDatabaseProductName());
+				System.out.println("Product Version: " + db.getDatabaseProductVersion());
+				System.out.println("\n");
+				
+				// Create Table
+				String sqlCreateTable = "CREATE TABLE IF NOT EXISTS PLAYERS " +
+	                        "(ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
+	                        " NAME TEXT NOT NULL, " +
+	                        " SCORE INT NOT NULL)";
+				try (PreparedStatement createTable = conn.prepareStatement(sqlCreateTable)) {
+					createTable.executeUpdate();
+				}
+				
+				// Insert Data
+				String sqlInsert = "INSERT INTO PLAYERS (NAME, SCORE) VALUES (?, ?)";
+				try (PreparedStatement insert = conn.prepareStatement(sqlInsert)) {
+					  insert.setString(1, name);
+					  insert.setInt(2, score);
+					  insert.executeUpdate();
+					
+					  System.out.println("Data Saved");
+				}
+				
+				// Select Data
+				String sqlSelect = "SELECT * FROM PLAYERS";
+				try (PreparedStatement select = conn.prepareStatement(sqlSelect)) {
+					ResultSet rs = select.executeQuery();
+                	DisplayRecords(rs);
+                	rs.close();
+				}
+				
+			}
+			
+			conn.close();
+			
+		} catch (Exception e) {e.printStackTrace();}	
+	}
+
+	public static void DisplayRecords(ResultSet rs) throws SQLException {
+        while (rs.next()) {
+            int id = rs.getInt("id");
+            String name = rs.getString("name");
+            int score = rs.getInt("score");
+            
+            System.out.println("-----------------------");
+            System.out.println("ID: " + id);
+            System.out.println("Name: " + name);
+            System.out.println("Score: " + score);
+            System.out.println("-----------------------\n");
+        }
+    }
+	
 	public void gameRestart() {
 		gameOver = false;
+		
+		frog.setLocation(frogStartX, frogStartY);
+		frogLabel.setLocation(frog.getX(), frog.getY());
+		
+		// End All Log Threads
+		 if (logs != null) {
+	        for (Log log : logs) {
+	        	if (log != null) {log.startThread();}
+        	}
+		 }
+  
+		 // End All Vehicle Threads
+		 for (Vehicle vehicle : vehicles) {
+            if (vehicle != null) {vehicle.startThread();}
+		 }
+	    
+	    System.out.println("Game Loaded");
+	    
+	}
+	
+	public void gameClose() {
+		gameStop();
+		dispose();
+		System.out.println("Exiting Game... ");
 	}
 	
 	public void updateScore() {
@@ -188,13 +323,8 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 	public void moveUp() {
 		int y = frog.getY();
 		y -= charStep;
-		if (y <= 50) {y = 50;} // Prevented from moving off screen top
+		if (y <= winGrass) {y = winGrass;} // Prevented from moving off screen top
 		frog.setY(y);
-		
-		if (y == winGrass) {
-			gameWin();
-		}
-		
 	}
 	public void moveDown() {
 		int y = frog.getY();
@@ -276,8 +406,7 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		frogLabel = new JLabel();
 		
 		// X Y
-		frog.setX(charStep * 7);
-		frog.setY(650);
+		frog.setLocation(frogStartX, frogStartY);
 		
 		// H W
 		frog.setHeight(charStep);

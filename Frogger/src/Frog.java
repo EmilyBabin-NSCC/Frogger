@@ -27,4 +27,10 @@ public class Frog extends Sprite {
 	    
 	    return frogRect.intersects(spriteRect);
 	}
+
+	// Set X & Y
+	public void setLocation(int x, int y) {
+		this.setX(x);
+		this.setY(y);
+	}
 }

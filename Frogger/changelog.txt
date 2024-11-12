@@ -117,7 +117,17 @@ v0.4
 - Removed some unnecessary code
 
 ----------------------------
+v1.0
 
+- Added a setLocation to Frog
+- Added a confirmation prompt to Esc key
+- When game is over & not closed with Esc, player is prompted to input
+	name and then name & score are saved to database
+- For assignment purposes, all records in database logged to console
+- Imported sqlite for database
+- Created frogger.db
+
+----------------------------
 
 
 
