@@ -54,18 +54,11 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 	private Boolean gameWin = false;
 	private int score = 0;
 	
+	// Frogger
 	public Frogger() {
-		// Setting the GUI window
-		setSize(screenWidth, screenHeight);
-		content = getContentPane();
-		setLocationRelativeTo(null);
-		setResizable(false);
-		setTitle("Frogger");
-		setLayout(null);
-		content.addKeyListener(this);
-		content.setFocusable(true);
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		loadGameWindow();
 		
+		// Create Vehicles
 		vehiclesArray = new int[][] { 	// Cars on Road
 			{roadLane[0], 1, 10},  		// Lane 1 | #ofVehicles | Speed
 			{roadLane[1], 1, 30},  		// Lane 2 | #ofVehicles | Speed
@@ -73,6 +66,7 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 			{roadLane[3], 1, -15}  		// Lane 4 | #ofVehicles | Speed
 		};
 		
+		// Create Logs
 		logsArray = new int[][] {   // Logs in Water
 			{waterLane[0], 5, 30},  // Lane 1 | #of Logs | Speed
 			{waterLane[1], 5, -25},	// Lane 2 | #of Logs | Speed
@@ -80,14 +74,6 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 			{waterLane[3], 5, -30},	// Lane 4 | #of Logs | Speed
 			{waterLane[4], 5, 20}   // Lane 5 | #of Logs | Speed
 		};
-		
-		scoreLabel = new JLabel();
-		scoreLabel.setText("Score: " + score);
-		scoreLabel.setFont(new Font("Calibri", Font.BOLD, 20));
-		scoreLabel.setForeground(Color.white);
-		scoreLabel.setBounds(550, 0, 500, 50);
-		content.add(scoreLabel);
-		content.setComponentZOrder(scoreLabel, count++);
 		
 		// Initializing Objects
 		createFrog();
@@ -137,188 +123,6 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		frogLabel.setLocation(frog.getX(), frog.getY());
 	}
 
-	// End Game
-	public void gameStop() {
-		// End All Log Threads
-		 if (logs != null) {
-	        for (Log log : logs) {
-	        	if (log != null) {log.stopThread();}
-        	}
-		 }
-  
-		 // End All Vehicle Threads
-		 for (Vehicle vehicle : vehicles) {
-            if (vehicle != null) {vehicle.stopThread();}
-		 }
-	}
-	
-	public void gameOver() {
-		System.out.println("Game Over");
-		score -= 50;
-		updateScore();
-		gameOver = true;
-		gameWin = false;
-		gameStop();
-		promptRestart();
-	}
-	
-	public void gameWin() {
-		if (frog.getY() == winGrass && gameOver == false) {
-			gameOver = true;
-			gameWin = true;
-			System.out.println("Game Win!");
-			score += 50;
-			updateScore();
-			gameStop();
-			promptRestart();
-		}
-		
-	}
-	
-	public void promptRestart() {
-		String gameState;
-		if (!gameWin) {gameState = "Game Over";}
-		else {gameState = "You Win!";}
-		
-		if (JOptionPane.showConfirmDialog(
-				null, "Do you want to play again?", 
-				gameState, JOptionPane.YES_NO_OPTION) 
-			== JOptionPane.YES_OPTION) {
-		    System.out.println("Restarting...");
-		    gameRestart();
-		} else {
-			System.out.println("Exiting...");
-			String name = JOptionPane.showInputDialog("Enter your name");
-			System.out.println(name + ": " + score);
-			
-			saveData(name, score);
-			
-			
-			gameClose();
-			
-		}
-	}
-	
-	public void saveData(String name, int score) {
-		Connection conn = null;
-		
-		try {
-			Class.forName("org.sqlite.JDBC");
-			
-			String dbURL = "jdbc:sqlite:frogger.db";
-			conn = DriverManager.getConnection(dbURL);
-			
-			if (conn != null) {
-				
-				DatabaseMetaData db = (DatabaseMetaData) conn.getMetaData();
-				System.out.println("\nConnected to Database");
-				System.out.println("Driver Name: " + db.getDriverName());
-				System.out.println("Driver Version: " + db.getDriverVersion());
-				System.out.println("Product Name: " + db.getDatabaseProductName());
-				System.out.println("Product Version: " + db.getDatabaseProductVersion());
-				System.out.println("\n");
-				
-				// Create Table
-				String sqlCreateTable = "CREATE TABLE IF NOT EXISTS PLAYERS " +
-	                        "(ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
-	                        " NAME TEXT NOT NULL, " +
-	                        " SCORE INT NOT NULL)";
-				try (PreparedStatement createTable = conn.prepareStatement(sqlCreateTable)) {
-					createTable.executeUpdate();
-				}
-				
-				// Insert Data
-				String sqlInsert = "INSERT INTO PLAYERS (NAME, SCORE) VALUES (?, ?)";
-				try (PreparedStatement insert = conn.prepareStatement(sqlInsert)) {
-					  insert.setString(1, name);
-					  insert.setInt(2, score);
-					  insert.executeUpdate();
-					
-					  System.out.println("Data Saved");
-				}
-				
-				// Select Data
-				String sqlSelect = "SELECT * FROM PLAYERS";
-				try (PreparedStatement select = conn.prepareStatement(sqlSelect)) {
-					ResultSet rs = select.executeQuery();
-                	DisplayRecords(rs);
-                	rs.close();
-				}
-				
-			}
-			
-			conn.close();
-			
-		} catch (Exception e) {e.printStackTrace();}	
-	}
-
-	public static void DisplayRecords(ResultSet rs) throws SQLException {
-        while (rs.next()) {
-            int id = rs.getInt("id");
-            String name = rs.getString("name");
-            int score = rs.getInt("score");
-            
-            System.out.println("-----------------------");
-            System.out.println("ID: " + id);
-            System.out.println("Name: " + name);
-            System.out.println("Score: " + score);
-            System.out.println("-----------------------\n");
-        }
-    }
-	
-	public void gameRestart() {
-		gameOver = false;
-		
-		frog.setLocation(frogStartX, frogStartY);
-		frogLabel.setLocation(frog.getX(), frog.getY());
-		
-		// End All Log Threads
-		 if (logs != null) {
-	        for (Log log : logs) {
-	        	if (log != null) {log.startThread();}
-        	}
-		 }
-  
-		 // End All Vehicle Threads
-		 for (Vehicle vehicle : vehicles) {
-            if (vehicle != null) {vehicle.startThread();}
-		 }
-	    
-	    System.out.println("Game Loaded");
-	    
-	}
-	
-	public void gameClose() {
-		gameStop();
-		dispose();
-		System.out.println("Exiting Game... ");
-	}
-	
-	public void updateScore() {
-		scoreLabel.setText("Score: " + score);
-	}
-	
-	// Retrieve Image from Image Folder
- 	public ImageIcon setImage(String fileName) {
-		return new ImageIcon(getClass().getResource("images/" + fileName));
-	}
-	
-	// Attach Image to Label (Background) - Temporary
-	public void loadBackgroundImage(JLabel label, ImageIcon image, int width, int height, int x, int y) {
-		label.setIcon(image);
-		label.setSize(width, height);
-		label.setLocation(x, y);
-		content.add(label);
-	}
-	
-	// Attach Image to Label
-	public void loadImgOntoLabel(JLabel label, ImageIcon img, Sprite object) {
-		label.setIcon(img);
-		label.setSize(object.getWidth(), object.getHeight());
-		label.setLocation(object.getX(), object.getY());
-		content.add(label);
-	}
-	
 	// Frog Movement
 	public void moveUp() {
 		int y = frog.getY();
@@ -360,47 +164,32 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		frog.setX(x);
 	}
 	
-	public void detectLogCollision() {
-		boolean onLog = false;
-
-	    for (Log log : logs) {
-	        if (log != null) {
-	            if (frog.isCollidingWith(log)) {
-	                frog.setX(log.getX());
-	                frogLabel.setLocation(log.getX(), log.getY());
-	                onLog = true; 
-	                break;
-	            }
-	        }
-	    }
-
-	    // If the frog is in water and not on any log, end the game
-	    if (isInWater(frog.getY()) && !onLog && gameOver != true) {
-	    	gameOver = true;
-	        gameOver();
-	    }
+	// GUI Configs
+	private void loadGameWindow() {
+		// Window
+		content = getContentPane();
 		
-	}
+		setSize(screenWidth, screenHeight);
+		setLocationRelativeTo(null); // Sets Frogger to Middle of Screen
+		setResizable(false);  							
+		setTitle("Frogger");
+		setLayout(null);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Ends Program on Closing Window
+		
+		content.addKeyListener(this);
+		content.setFocusable(true);
 
-	// Checks if Frog is in Water
-	private Boolean isInWater(int y) {
-		return y >= 100 && y < 350;
+		// Score Label
+		scoreLabel = new JLabel();
+		scoreLabel.setText("Score: " + score);
+		scoreLabel.setFont(new Font("Calibri", Font.BOLD, 20));
+		scoreLabel.setForeground(Color.white);
+		scoreLabel.setBounds(550, 0, 500, 50);
+		content.add(scoreLabel);
+		content.setComponentZOrder(scoreLabel, count++);
 	}
 	
-	// Checks if Frog is on Grass
-	private Boolean isOnGrass(int y) {
-		// Top Grass
-		if (y >= 0 && y < 100) {return true;} 
-		
-		// Middle Grass
-		else if (y >= 350 && y < 450) {return true;}
-		
-		// Bottom Grass
-		else if (y >= 650) {return true;}
-		else return false;  
-	}
-	
-	// Creates Frog Object
+	// Creating Objects
 	private void createFrog() {
 		frog = new Frog();
 		frogLabel = new JLabel();
@@ -419,8 +208,6 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		
 		content.setComponentZOrder(frogLabel, count++);
 	}
-	
-	// Creates Vehicle Objects
 	private void createVehicles() {
 		// Counts the total number of vehicles
 		int totalVehicles = 0;
@@ -479,66 +266,284 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 			}
 		}
 	}
-
  	private void createLogs() {
- 		int totalLogs = 0;
- 		for (int i = 0; i < logsArray.length; i++) {
-			totalLogs += logsArray[i][1]; 
-		}
-		
-		// Creates an array of logs = # of total logs
-		logs = new Log[totalLogs];
-		int logIndex = 0;
-		
-		// For each Lane
-		for (int i = 0; i < logsArray.length; i++) {
-			int xPos = 0;
-			// Used to equally separate the logs
-			int increment = screenWidth / logsArray[i][1];
-			
-			// For each log in lane
-			for (int j = 0; j < logsArray[i][1]; j++) {
-				Log log = new Log();
-				JLabel logLabel = new JLabel();
-			
-				// X | Y
-				log.setX(xPos);
-				log.setY(logsArray[i][0]);
-				
-				// H | W
-				log.setHeight(50);	
-				log.setWidth(50);
-				
-				// Image
-				log.setImage("log1.png");
-				logImage = setImage(log.getImage());
-				loadImgOntoLabel(logLabel, logImage, log);
-				
-				// Speed
-				log.setSpeed(logsArray[i][2]);
-				
-				// Moving | Frogger
-				log.setMoving(true);
-				log.setFrogger(this);
-				
-				// logLabel | Frog | FrogLabel
-				log.setLogLabel(logLabel);
-				log.setFrog(frog);
-				log.setFrogLabel(frogLabel);
-		
-				// Start Thread
-				log.startThread();
-				
-				// Adding Logs to Array | Incrementing X Position
-				logs[logIndex++] = log;
-				xPos += increment;
-				
-				content.setComponentZOrder(logLabel, count++);
+	 		int totalLogs = 0;
+	 		for (int i = 0; i < logsArray.length; i++) {
+				totalLogs += logsArray[i][1]; 
 			}
+			
+			// Creates an array of logs = # of total logs
+			logs = new Log[totalLogs];
+			int logIndex = 0;
+			
+			// For each Lane
+			for (int i = 0; i < logsArray.length; i++) {
+				int xPos = 0;
+				// Used to equally separate the logs
+				int increment = screenWidth / logsArray[i][1];
+				
+				// For each log in lane
+				for (int j = 0; j < logsArray[i][1]; j++) {
+					Log log = new Log();
+					JLabel logLabel = new JLabel();
+				
+					// X | Y
+					log.setX(xPos);
+					log.setY(logsArray[i][0]);
+					
+					// H | W
+					log.setHeight(50);	
+					log.setWidth(50);
+					
+					// Image
+					log.setImage("log1.png");
+					logImage = setImage(log.getImage());
+					loadImgOntoLabel(logLabel, logImage, log);
+					
+					// Speed
+					log.setSpeed(logsArray[i][2]);
+					
+					// Moving | Frogger
+					log.setMoving(true);
+					log.setFrogger(this);
+					
+					// logLabel | Frog | FrogLabel
+					log.setLogLabel(logLabel);
+					log.setFrog(frog);
+					log.setFrogLabel(frogLabel);
+			
+					// Start Thread
+					log.startThread();
+					
+					// Adding Logs to Array | Incrementing X Position
+					logs[logIndex++] = log;
+					xPos += increment;
+					
+					content.setComponentZOrder(logLabel, count++);
+				}
+			}
+			
+	 	}
+	
+	// Game Conditions
+ 	public void gameWin() {
+		if (frog.getY() == winGrass && gameOver == false) {
+			gameOver = true;
+			gameWin = true;
+			System.out.println("Game Win!");
+			score += 50;
+			updateScore();
+			gameStop();
+			promptRestart();
 		}
 		
- 	}
- 	
+	}
+ 	public void gameLose() {
+		System.out.println("Game Over");
+		score -= 50;
+		updateScore();
+		gameOver = true;
+		gameWin = false;
+		gameStop();
+		promptRestart();
+	}
+ 	public void gameStop() {
+		// End All Log Threads
+		 if (logs != null) {
+	        for (Log log : logs) {
+	        	if (log != null) {log.stopThread();}
+        	}
+		 }
+  
+		 // End All Vehicle Threads
+		 for (Vehicle vehicle : vehicles) {
+            if (vehicle != null) {vehicle.stopThread();}
+		 }
+	}
+ 	public void gameRestart() {
+		gameOver = false;
+		
+		frog.setLocation(frogStartX, frogStartY);
+		frogLabel.setLocation(frog.getX(), frog.getY());
+		
+		// End All Log Threads
+		 if (logs != null) {
+	        for (Log log : logs) {
+	        	if (log != null) {log.startThread();}
+        	}
+		 }
+  
+		 // End All Vehicle Threads
+		 for (Vehicle vehicle : vehicles) {
+            if (vehicle != null) {vehicle.startThread();}
+		 }
+	    
+	    System.out.println("Game Loaded");
+	    
+	}
+ 	public void gameClose() {
+		gameStop();
+		dispose();
+		System.out.println("Exiting Game... ");
+	}
+		
+	public void promptRestart() {
+		String gameState;
+		if (!gameWin) {gameState = "Game Over";}
+		else {gameState = "You Win!";}
+		
+		if (JOptionPane.showConfirmDialog(
+				null, "Do you want to play again?", 
+				gameState, JOptionPane.YES_NO_OPTION) 
+			== JOptionPane.YES_OPTION) {
+		    System.out.println("Restarting...");
+		    gameRestart();
+		} else {
+			System.out.println("Exiting...");
+			String name = null;
+			while (name == null || name.isEmpty()) {
+	            name = JOptionPane.showInputDialog(null, "Enter your name");
+	            if (name.isEmpty()) {
+	                JOptionPane.showMessageDialog(null, "You must enter a name.", "Invalid Input", JOptionPane.ERROR_MESSAGE);
+	            }
+	        }
+			
+			saveData(name, score);
+			
+			gameClose();
+			
+		}
+	}
+	
+	public void updateScore() {
+		scoreLabel.setText("Score: " + score);
+	}
+	
+	public void saveData(String name, int score) {
+		Connection conn = null;
+		
+		try {
+			Class.forName("org.sqlite.JDBC");
+			
+			String dbURL = "jdbc:sqlite:frogger.db";
+			conn = DriverManager.getConnection(dbURL);
+			
+			if (conn != null) {
+				
+				DatabaseMetaData db = (DatabaseMetaData) conn.getMetaData();
+				System.out.println("\nConnected to Database");
+				System.out.println("Driver Name: " + db.getDriverName());
+				System.out.println("Driver Version: " + db.getDriverVersion());
+				System.out.println("Product Name: " + db.getDatabaseProductName());
+				System.out.println("Product Version: " + db.getDatabaseProductVersion());
+				System.out.println("\n");
+				
+				// Create Table
+				String sqlCreateTable = "CREATE TABLE IF NOT EXISTS PLAYERS " +
+	                        "(ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
+	                        " NAME TEXT NOT NULL, " +
+	                        " SCORE INT NOT NULL)";
+				try (PreparedStatement createTable = conn.prepareStatement(sqlCreateTable)) {
+					createTable.executeUpdate();
+				}
+				
+				// Truncate Data
+				String sqlTruncate = "DELETE FROM PLAYERS";
+	            try (PreparedStatement truncateTable = conn.prepareStatement(sqlTruncate)) {
+	                truncateTable.executeUpdate();
+	            }
+				
+				// Insert Data
+				String sqlInsert = "INSERT INTO PLAYERS (NAME, SCORE) VALUES (?, ?)";
+				try (PreparedStatement insert = conn.prepareStatement(sqlInsert)) {
+					  insert.setString(1, name);
+					  insert.setInt(2, score);
+					  insert.executeUpdate();
+					
+					  System.out.println("Data Saved");
+				}
+				
+				// Select Data
+				String sqlSelect = "SELECT * FROM PLAYERS";
+				try (PreparedStatement select = conn.prepareStatement(sqlSelect)) {
+					ResultSet rs = select.executeQuery();
+                	displayRecords(rs);
+                	rs.close();
+				}
+				
+			}
+			
+			conn.close();
+			
+		} catch (Exception e) {e.printStackTrace();}	
+	}
+	public static void displayRecords(ResultSet rs) throws SQLException {
+        while (rs.next()) {
+            int id = rs.getInt("id");
+            String name = rs.getString("name");
+            int score = rs.getInt("score");
+            
+            System.out.println("-----------------------");
+            System.out.println("ID: " + id);
+            System.out.println("Name: " + name);
+            System.out.println("Score: " + score);
+            System.out.println("-----------------------\n");
+        }
+    }
+	
+	// Image Handlers
+ 	public ImageIcon setImage(String fileName) {
+		return new ImageIcon(getClass().getResource("images/" + fileName));
+	}
+	public void loadBackgroundImage(JLabel label, ImageIcon image, int width, int height, int x, int y) {
+		label.setIcon(image);
+		label.setSize(width, height);
+		label.setLocation(x, y);
+		content.add(label);
+	}
+	public void loadImgOntoLabel(JLabel label, ImageIcon img, Sprite object) {
+		label.setIcon(img);
+		label.setSize(object.getWidth(), object.getHeight());
+		label.setLocation(object.getX(), object.getY());
+		content.add(label);
+	}
+	
+	public void detectLogCollision() {
+		boolean onLog = false;
+
+	    for (Log log : logs) {
+	        if (log != null) {
+	            if (frog.isCollidingWith(log)) {
+	                frog.setX(log.getX());
+	                frogLabel.setLocation(log.getX(), log.getY());
+	                onLog = true; 
+	                break;
+	            }
+	        }
+	    }
+
+	    // If the frog is in water and not on any log, end the game
+	    if (isInWater(frog.getY()) && !onLog && gameOver != true) {
+	    	gameOver = true;
+	        gameLose();
+	    }
+		
+	}
+
+	// Where is the Frog
+	private Boolean isInWater(int y) {return y >= 100 && y < 350;}
+	private Boolean isOnGrass(int y) {
+		// Top Grass
+		if (y >= 0 && y < 100) {return true;} 
+		
+		// Middle Grass
+		else if (y >= 350 && y < 450) {return true;}
+		
+		// Bottom Grass
+		else if (y >= 650) {return true;}
+		else return false;  
+	}
+	
 	// Sets Background - Temporary
 	public void setBackground() {		
 		// This is a temporary setup
@@ -546,7 +551,7 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		// Y: 0 to 50
 		for (int i =0; i < gridWidth; i++) {
 			JLabel label = new JLabel();
-			ImageIcon image = setImage("frame1.png");
+			ImageIcon image = setImage("road1.png");
 			loadBackgroundImage(label, image, 50, 50, i *50, 0);
 			content.add(label);
 			content.setComponentZOrder(label, count++);
@@ -685,7 +690,7 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 		// Y: 750 to 800
 		for (int i =0; i < gridWidth; i++) {
 			JLabel label = new JLabel();
-			ImageIcon image = setImage("frame1.png");
+			ImageIcon image = setImage("road1.png");
 			loadBackgroundImage(label, image, 50, 50, i *50, 750);
 			content.add(label);
 			content.setComponentZOrder(label, count++);

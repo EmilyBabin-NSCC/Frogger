@@ -124,11 +124,19 @@ v1.0
 - When game is over & not closed with Esc, player is prompted to input
 	name and then name & score are saved to database
 - For assignment purposes, all records in database logged to console
-- Imported sqlite for database
+- Imported SQLite for database
 - Created frogger.db
 
 ----------------------------
+v1.1
 
+- Moved GUI code in Frogger.java to its own function
+- Major Frogger.java code cleanup and organization
+- Fixed bug where if you didn't enter a name after the game ends,
+	you'd enter a null into the database and break it
+- Deleted previous records from database to clear up the nulls
+
+----------------------------
 
 
 

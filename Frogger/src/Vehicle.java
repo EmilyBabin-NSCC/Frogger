@@ -94,7 +94,7 @@ public class Vehicle extends Sprite implements Runnable {
 		// If Vehicle's Rectangle intersects with Frog's Rectangle:
 		if (r.intersects(frog.getRectangle())) {
 			this.moving = false;
-			frogger.gameOver();
+			frogger.gameLose();
 		}
 	}
 }
