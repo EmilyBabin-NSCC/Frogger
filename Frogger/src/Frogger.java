@@ -447,12 +447,6 @@ public class Frogger extends JFrame implements KeyListener, ActionListener {
 					createTable.executeUpdate();
 				}
 				
-				// Truncate Data
-				String sqlTruncate = "DELETE FROM PLAYERS";
-	            try (PreparedStatement truncateTable = conn.prepareStatement(sqlTruncate)) {
-	                truncateTable.executeUpdate();
-	            }
-				
 				// Insert Data
 				String sqlInsert = "INSERT INTO PLAYERS (NAME, SCORE) VALUES (?, ?)";
 				try (PreparedStatement insert = conn.prepareStatement(sqlInsert)) {

@@ -137,7 +137,11 @@ v1.1
 - Deleted previous records from database to clear up the nulls
 
 ----------------------------
+v1.1.1
 
+- Removed code to truncate the database that was left in by accident
+
+----------------------------
 
 
 
